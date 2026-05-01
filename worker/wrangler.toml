@@ -1,4 +1,4 @@
-name = "tour-de-playground"
+name = "tour-de-playground-api"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
 

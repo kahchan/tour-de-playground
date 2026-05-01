@@ -23,3 +23,8 @@ dist/
 .idea/
 *.swp
 *.swo
+
+# Wrangler
+.wrangler
+.dev.vars*
+!.dev.vars.example
