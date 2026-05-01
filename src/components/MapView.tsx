@@ -5,10 +5,16 @@ import type { FeatureCollection } from 'geojson'
 import type { Playground } from '../types'
 import styles from './MapView.module.css'
 
+interface FlyToTarget {
+  lat: number
+  lng: number
+}
+
 interface Props {
   playgrounds: Playground[]
   checkedIds: Set<string>
   onMarkerClick: (playground: Playground) => void
+  flyToTarget?: FlyToTarget | null
 }
 
 const WELLINGTON: [number, number] = [174.7762, -41.2865]
@@ -24,7 +30,7 @@ function toGeoJSON(playgrounds: Playground[], checkedIds: Set<string>): FeatureC
   }
 }
 
-export default function MapView({ playgrounds, checkedIds, onMarkerClick }: Props) {
+export default function MapView({ playgrounds, checkedIds, onMarkerClick, flyToTarget }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const onClickRef = useRef(onMarkerClick)
@@ -162,6 +168,15 @@ export default function MapView({ playgrounds, checkedIds, onMarkerClick }: Prop
     const source = mapRef.current.getSource('playgrounds') as maplibregl.GeoJSONSource | undefined
     source?.setData(toGeoJSON(playgrounds, checkedIds))
   }, [playgrounds, checkedIds, mapLoaded])
+
+  useEffect(() => {
+    if (!flyToTarget || !mapRef.current) return
+    mapRef.current.flyTo({
+      center: [flyToTarget.lng, flyToTarget.lat],
+      zoom: Math.max(mapRef.current.getZoom(), 15),
+      duration: 800,
+    })
+  }, [flyToTarget])
 
   return <div ref={containerRef} className={styles.map} />
 }

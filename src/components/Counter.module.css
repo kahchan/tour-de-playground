@@ -11,5 +11,11 @@
   color: #1a1a1a;
   z-index: 10;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  pointer-events: none;
+  border: none;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.counter:active {
+  background: rgba(240, 240, 240, 0.95);
 }

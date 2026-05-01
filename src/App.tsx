@@ -7,6 +7,7 @@ import Counter from './components/Counter'
 import NameBadge from './components/NameBadge'
 import MarkerPopup from './components/MarkerPopup'
 import NamePrompt from './components/NamePrompt'
+import Sidebar from './components/Sidebar'
 import styles from './App.module.css'
 
 export default function App() {
@@ -16,6 +17,8 @@ export default function App() {
   const [selected, setSelected] = useState<Playground | null>(null)
   const [showNamePrompt, setShowNamePrompt] = useState(false)
   const [pendingId, setPendingId] = useState<string | null>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number } | null>(null)
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}playgrounds.json`)
@@ -47,14 +50,33 @@ export default function App() {
     }
   }
 
+  function handleSidebarSelect(playground: Playground) {
+    setSidebarOpen(false)
+    setFlyToTarget({ lat: playground.lat, lng: playground.lng })
+    setSelected(playground)
+  }
+
   return (
     <div className={styles.app}>
       <MapView
         playgrounds={playgrounds}
         checkedIds={checkedIds}
         onMarkerClick={setSelected}
+        flyToTarget={flyToTarget}
       />
-      <Counter total={playgrounds.length} visited={checkedIds.size} />
+      <Sidebar
+        playgrounds={playgrounds}
+        checkIns={checkIns}
+        checkedIds={checkedIds}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onSelect={handleSidebarSelect}
+      />
+      <Counter
+        total={playgrounds.length}
+        visited={checkedIds.size}
+        onToggle={() => setSidebarOpen((o) => !o)}
+      />
       <NameBadge name={name} onChangeName={() => setShowNamePrompt(true)} />
       {selected && !showNamePrompt && (
         <MarkerPopup

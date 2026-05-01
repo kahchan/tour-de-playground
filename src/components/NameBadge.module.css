@@ -1,6 +1,6 @@
 .badge {
   position: absolute;
-  bottom: 1.5rem;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
   right: 1rem;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(4px);

@@ -3,12 +3,13 @@ import styles from './Counter.module.css'
 interface Props {
   total: number
   visited: number
+  onToggle: () => void
 }
 
-export default function Counter({ total, visited }: Props) {
+export default function Counter({ total, visited, onToggle }: Props) {
   return (
-    <div className={styles.counter}>
-      {visited} / {total} visited
-    </div>
+    <button className={styles.counter} onClick={onToggle} aria-label="Toggle playground list">
+      ☰ {visited} / {total}
+    </button>
   )
 }
