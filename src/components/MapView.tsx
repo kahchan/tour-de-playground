@@ -194,9 +194,10 @@ export default function MapView({
 
   useEffect(() => {
     if (!flyToTarget || !mapRef.current) return
+    const currentZoom = mapRef.current.getZoom()
     mapRef.current.flyTo({
       center: [flyToTarget.lng, flyToTarget.lat],
-      zoom: Math.max(mapRef.current.getZoom(), 15),
+      zoom: currentZoom < 13 ? 14 : currentZoom,
       duration: 800,
     })
   }, [flyToTarget])

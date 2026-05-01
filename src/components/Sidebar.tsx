@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import type { CheckIn, Playground } from '../types'
 import styles from './Sidebar.module.css'
 
@@ -13,6 +13,12 @@ interface Props {
   disabledIds: Set<string>
   onToggleDisabled: (id: string, on: boolean) => void
   onAdminReset: (passphrase: string) => Promise<void>
+  highlight?: { id: string; seq: number } | null
+}
+
+interface SuburbGroup {
+  suburb: string
+  playgrounds: Playground[]
 }
 
 export default function Sidebar({
@@ -26,21 +32,56 @@ export default function Sidebar({
   disabledIds,
   onToggleDisabled,
   onAdminReset,
+  highlight,
 }: Props) {
+  const [expandedSuburbs, setExpandedSuburbs] = useState<Set<string>>(new Set())
+  const [flashId, setFlashId] = useState<string | null>(null)
+  const itemRefs = useRef<Map<string, HTMLElement>>(new Map())
   const [resetConfirming, setResetConfirming] = useState(false)
   const [resetPassphrase, setResetPassphrase] = useState('')
   const [resetPending, setResetPending] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
 
-  const sorted = [...playgrounds].sort((a, b) => {
-    const aDisabled = disabledIds.has(a.id)
-    const bDisabled = disabledIds.has(b.id)
-    if (isAdmin && aDisabled !== bDisabled) return aDisabled ? 1 : -1
-    const aChecked = checkedIds.has(a.id)
-    const bChecked = checkedIds.has(b.id)
-    if (aChecked !== bChecked) return aChecked ? 1 : -1
-    return a.name.localeCompare(b.name)
-  })
+  const suburbGroups = useMemo((): SuburbGroup[] => {
+    const map = new Map<string, Playground[]>()
+    for (const p of playgrounds) {
+      const suburb = p.suburb ?? 'Unknown'
+      if (!map.has(suburb)) map.set(suburb, [])
+      map.get(suburb)!.push(p)
+    }
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([suburb, pgs]) => ({
+        suburb,
+        playgrounds: [...pgs].sort((a, b) => a.name.localeCompare(b.name)),
+      }))
+  }, [playgrounds])
+
+  useEffect(() => {
+    if (!highlight) return
+    const { id } = highlight
+    const group = suburbGroups.find((g) => g.playgrounds.some((p) => p.id === id))
+    if (!group) return
+    setExpandedSuburbs((prev) => new Set([...prev, group.suburb]))
+    setFlashId(id)
+    const scrollTimer = setTimeout(() => {
+      itemRefs.current.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, 80)
+    const flashTimer = setTimeout(() => setFlashId(null), 1400)
+    return () => {
+      clearTimeout(scrollTimer)
+      clearTimeout(flashTimer)
+    }
+  }, [highlight?.seq]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function toggleSuburb(suburb: string) {
+    setExpandedSuburbs((prev) => {
+      const next = new Set(prev)
+      if (next.has(suburb)) next.delete(suburb)
+      else next.add(suburb)
+      return next
+    })
+  }
 
   async function handleResetConfirm() {
     setResetPending(true)
@@ -67,12 +108,12 @@ export default function Sidebar({
       {isOpen && <div className={styles.backdrop} onClick={onClose} />}
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
         <div className={styles.header}>
-          <span className={styles.title}>
-            Playgrounds{' '}
-            <span className={styles.count}>
-              {checkedIds.size} / {playgrounds.length}
+          <div className={styles.headerText}>
+            <span className={styles.title}>Tour de Playground</span>
+            <span className={styles.progress}>
+              {checkedIds.size} / {playgrounds.length} done
             </span>
-          </span>
+          </div>
           <div className={styles.headerActions}>
             {isAdmin && !resetConfirming && (
               <button
@@ -116,70 +157,104 @@ export default function Sidebar({
               >
                 {resetPending ? 'Resetting…' : 'Confirm reset'}
               </button>
-              <button
-                className={styles.resetCancelBtn}
-                onClick={handleResetCancel}
-              >
+              <button className={styles.resetCancelBtn} onClick={handleResetCancel}>
                 Cancel
               </button>
             </div>
           </div>
         )}
 
-        <ul className={styles.list}>
-          {sorted.map((p) => {
-            const checked = checkedIds.has(p.id)
-            const disabled = disabledIds.has(p.id)
-            const checkIn = checkIns.find((c) => c.id === p.id)
+        <div className={styles.body}>
+          {suburbGroups.map(({ suburb, playgrounds: pgs }) => {
+            const checkedCount = pgs.filter((p) => checkedIds.has(p.id)).length
+            const isExpanded = expandedSuburbs.has(suburb)
             return (
-              <li key={p.id}>
-                <div
-                  className={[
-                    styles.item,
-                    checked ? styles.itemChecked : '',
-                    isAdmin && disabled ? styles.itemDisabled : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
+              <div key={suburb} className={styles.suburbSection}>
+                <button
+                  className={styles.suburbHeader}
+                  onClick={() => toggleSuburb(suburb)}
                 >
-                  <button
-                    className={styles.itemMain}
-                    onClick={() => !disabled && onSelect(p)}
-                    disabled={disabled && !isAdmin}
+                  <span
+                    className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ''}`}
                   >
-                    <span
-                      className={`${styles.dot} ${checked ? styles.dotChecked : ''}`}
-                    >
-                      {checked ? '✓' : ''}
-                    </span>
-                    <span className={styles.itemName}>{p.name}</span>
-                    {isAdmin && disabled && (
-                      <span className={styles.disabledBadge}>disabled</span>
-                    )}
-                    {checkIn && !disabled && (
-                      <span className={styles.itemBy}>{checkIn.name}</span>
-                    )}
-                  </button>
-                  {isAdmin && (
-                    <button
-                      className={
-                        disabled ? styles.enableBtn : styles.disableBtn
-                      }
-                      onClick={() => onToggleDisabled(p.id, !disabled)}
-                      title={
-                        disabled
-                          ? 'Enable this playground'
-                          : 'Disable this playground'
-                      }
-                    >
-                      {disabled ? 'Enable' : 'Disable'}
-                    </button>
-                  )}
-                </div>
-              </li>
+                    ›
+                  </span>
+                  <span className={styles.suburbName}>{suburb}</span>
+                  <span className={styles.suburbCount}>
+                    {checkedCount}/{pgs.length}
+                  </span>
+                </button>
+                {isExpanded && (
+                  <ul className={styles.suburbList}>
+                    {pgs.map((p) => {
+                      const checked = checkedIds.has(p.id)
+                      const disabled = disabledIds.has(p.id)
+                      const checkIn = checkIns.find((c) => c.id === p.id)
+                      return (
+                        <li
+                          key={p.id}
+                          ref={(el) => {
+                            if (el) itemRefs.current.set(p.id, el)
+                            else itemRefs.current.delete(p.id)
+                          }}
+                        >
+                          <div
+                            className={[
+                              styles.item,
+                              checked ? styles.itemChecked : '',
+                              isAdmin && disabled ? styles.itemDisabled : '',
+                              flashId === p.id ? styles.itemFlash : '',
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
+                          >
+                            <button
+                              className={styles.itemMain}
+                              onClick={() => !disabled && onSelect(p)}
+                              disabled={disabled && !isAdmin}
+                            >
+                              <span
+                                className={`${styles.dot} ${checked ? styles.dotChecked : ''}`}
+                              >
+                                {checked ? '✓' : ''}
+                              </span>
+                              <span className={styles.itemName}>{p.name}</span>
+                              {isAdmin && disabled && (
+                                <span className={styles.disabledBadge}>
+                                  disabled
+                                </span>
+                              )}
+                              {checkIn && !disabled && (
+                                <span className={styles.itemBy}>
+                                  {checkIn.name}
+                                </span>
+                              )}
+                            </button>
+                            {isAdmin && (
+                              <button
+                                className={
+                                  disabled ? styles.enableBtn : styles.disableBtn
+                                }
+                                onClick={() => onToggleDisabled(p.id, !disabled)}
+                                title={
+                                  disabled
+                                    ? 'Enable this playground'
+                                    : 'Disable this playground'
+                                }
+                              >
+                                {disabled ? 'Enable' : 'Disable'}
+                              </button>
+                            )}
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </div>
             )
           })}
-        </ul>
+        </div>
       </aside>
     </>
   )

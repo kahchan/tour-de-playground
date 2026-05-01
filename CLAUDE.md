@@ -4,7 +4,7 @@ Wellington playground check-off map. Riders tap a marker to check off a playgrou
 
 ## Status
 
-UI rebuild in progress (Phases 1–6). Phases 1 and 2 complete.
+UI rebuild in progress (Phases 1–6). Phases 1–4 complete.
 
 - **Frontend:** https://kahchan.github.io/tour-de-playground
 - **API Worker:** https://tour-de-playground-api.chan-kah.workers.dev
@@ -50,7 +50,7 @@ Copy `.env.example` to `.env.local` and fill in values.
 - `src/hooks/useCheckIns.ts` — polls Worker every 7s when `VITE_WORKER_URL` is set; falls back to localStorage if not. Caches Worker state in localStorage for instant render on refresh. Also manages `disabledIds` and exposes `toggleDisabled`, `resetAll`.
 - `src/hooks/useName.ts` — name always in localStorage, never sent to Worker.
 - `src/components/MapView.tsx` — MapLibre map. Blue circles = unchecked, green = checked, indigo clusters. Accepts `flyToTarget` prop to animate to a playground.
-- `src/components/Sidebar.tsx` — collapsible list; bottom sheet on mobile, left panel on desktop. In admin mode shows disable/enable toggles and a reset button.
+- `src/components/Sidebar.tsx` — suburb-grouped collapsible list; bottom sheet on mobile, floating right card on desktop (360px, 16px margins, overlays map). Accepts `highlight` prop (`{ id, seq }`) to expand + scroll + flash a specific item. In admin mode shows disable/enable toggles and a reset button.
 - Reset UI at `/?reset=1` — passphrase POSTs to `/reset` on the Worker.
 - Admin mode at `/?admin=1` — no auth beyond the URL param. Shows disabled playgrounds with dashed border + toggle; shows "Reset everything" button (requires passphrase to confirm).
 
@@ -94,24 +94,15 @@ Copy `.env.example` to `.env.local` and fill in values.
 - Plain CSS modules — no CSS framework unless agreed
 - Ask before installing any library beyond React, MapLibre, and build tooling
 
-## UI rebuild plan (Phases 3–6 remaining)
+## UI rebuild plan (Phases 5–6 remaining)
 
 Style reference: mire·studio — dark canvas, vibrant color blocks, 25px radius, compact density.
 See memory file `style_mirestudio.md` for full token reference.
 
-### Phase 3 — Floating right sidebar with suburb groups *(next)*
-- Floating card on right side, 16px margins, 340–380px wide, sits over map (full-bleed underneath)
-- Internal scroll only; does not push map narrower
-- Header: title + overall progress counter
-- Body: suburbs as collapsible sections with "X of Y done" counts; all collapsed by default
-- Items: playground name + check state, sorted alphabetically within suburb
-- Keep existing mobile bottom-sheet UX untouched
+### ~~Phase 3 — Floating right sidebar with suburb groups~~ ✓
+### ~~Phase 4 — Bidirectional sidebar ↔ map sync~~ ✓
 
-### Phase 4 — Bidirectional sidebar ↔ map sync
-- Sidebar item → pan map (bump to zoom 14 if below 13), open marker popup
-- Map marker → scroll sidebar to item, expand its suburb section, briefly highlight row
-
-### Phase 5 — Check-off interaction + done visual treatment
+### Phase 5 — Check-off interaction + done visual treatment *(next)*
 - Full-row tap in sidebar toggles check; popup has mark-done/undo button
 - Done markers: faded + tick badge; done sidebar rows: muted + tick icon
 

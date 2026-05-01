@@ -28,6 +28,10 @@ export default function App() {
     lat: number
     lng: number
   } | null>(null)
+  const [sidebarHighlight, setSidebarHighlight] = useState<{
+    id: string
+    seq: number
+  } | null>(null)
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}playgrounds.json`)
@@ -71,8 +75,14 @@ export default function App() {
     }
   }
 
+  function handleMarkerClick(playground: Playground) {
+    setSelected(playground)
+    setSidebarOpen(true)
+    setSidebarHighlight((prev) => ({ id: playground.id, seq: (prev?.seq ?? 0) + 1 }))
+  }
+
   function handleSidebarSelect(playground: Playground) {
-    setSidebarOpen(false)
+    if (window.innerWidth < 640) setSidebarOpen(false)
     setFlyToTarget({ lat: playground.lat, lng: playground.lng })
     setSelected(playground)
   }
@@ -93,7 +103,7 @@ export default function App() {
       <MapView
         playgrounds={visiblePlaygrounds}
         checkedIds={checkedIds}
-        onMarkerClick={setSelected}
+        onMarkerClick={handleMarkerClick}
         flyToTarget={flyToTarget}
       />
       <Sidebar
@@ -107,6 +117,7 @@ export default function App() {
         disabledIds={disabledIds}
         onToggleDisabled={toggleDisabled}
         onAdminReset={resetAll}
+        highlight={sidebarHighlight}
       />
       <Counter
         total={visiblePlaygrounds.length}
