@@ -48,7 +48,7 @@ Copy `.env.example` to `.env.local` and fill in values.
 
 - `src/hooks/useCheckIns.ts` — polls Worker every 7s when `VITE_WORKER_URL` is set; falls back to localStorage if not. Caches Worker state in localStorage for instant render on refresh. Also manages `disabledIds` and exposes `toggleDisabled`, `resetAll`.
 - `src/hooks/useName.ts` — name always in localStorage, never sent to Worker.
-- `src/components/MapView.tsx` — MapLibre map. Blue circles = unchecked, green = checked, indigo clusters. Accepts `flyToTarget` prop to animate to a playground.
+- `src/components/MapView.tsx` — MapLibre map. Blue circles = unchecked, faded green + ✓ tick = checked, indigo clusters. Clicking a marker opens the popup and highlights the item in the sidebar.
 - `src/components/Sidebar.tsx` — suburb-grouped collapsible list; bottom sheet on mobile, floating right card on desktop (360px, 16px margins, overlays map). Accepts `highlight` prop (`{ id, seq }`) to expand + scroll + flash a specific item. Full-row tap toggles check (calls `onToggleCheck`). In admin mode shows disable/enable toggles and a reset button.
 - Reset UI at `/?reset=1` — passphrase POSTs to `/reset` on the Worker.
 - Admin mode at `/?admin=1` — no auth beyond the URL param. Shows disabled playgrounds with dashed border + toggle; shows "Reset everything" button (requires passphrase to confirm).
