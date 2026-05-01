@@ -24,10 +24,6 @@ export default function App() {
   const [showNamePrompt, setShowNamePrompt] = useState(false)
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [flyToTarget, setFlyToTarget] = useState<{
-    lat: number
-    lng: number
-  } | null>(null)
   const [sidebarHighlight, setSidebarHighlight] = useState<{
     id: string
     seq: number
@@ -115,7 +111,6 @@ export default function App() {
         playgrounds={visiblePlaygrounds}
         checkedIds={checkedIds}
         onMarkerClick={handleMarkerClick}
-        flyToTarget={flyToTarget}
       />
       <Sidebar
         playgrounds={visiblePlaygrounds}
