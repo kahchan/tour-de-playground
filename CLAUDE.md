@@ -38,6 +38,19 @@ Copy `.env.example` to `.env.local` and fill in values.
 - Plain CSS modules — no CSS framework unless agreed
 - Ask before installing any library beyond React, MapLibre, and build tooling
 
+## Extension points
+
+| Version | Feature |
+|---|---|
+| v2 | Geofence: only allow check-off within 50m via browser geolocation |
+| v2 | Per-rider stats (your count, your last check-off) |
+| Later | Offline tile caching via Service Worker (Cache API) — useful for on-ride use where connectivity is unreliable |
+| Later | `?room=xyz` for per-group sessions |
+| Later | Photo upload on check-off |
+| Later | Swap MapTiler for self-hosted Protomaps tiles |
+| Later | Suburbs / area filters |
+| Later | Routing suggestions |
+
 ## Architecture notes
 
 - Phase 1: local-only, `localStorage` for check-offs
