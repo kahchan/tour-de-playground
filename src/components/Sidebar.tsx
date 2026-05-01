@@ -35,6 +35,7 @@ export default function Sidebar({
   highlight,
 }: Props) {
   const [expandedSuburbs, setExpandedSuburbs] = useState<Set<string>>(new Set())
+  const [showUndoneOnly, setShowUndoneOnly] = useState(false)
   const [flashId, setFlashId] = useState<string | null>(null)
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map())
   const [resetConfirming, setResetConfirming] = useState(false)
@@ -115,6 +116,13 @@ export default function Sidebar({
             </span>
           </div>
           <div className={styles.headerActions}>
+            <button
+              className={`${styles.filterToggle} ${showUndoneOnly ? styles.filterToggleActive : ''}`}
+              onClick={() => setShowUndoneOnly((o) => !o)}
+              title={showUndoneOnly ? 'Show all playgrounds' : 'Show only undone'}
+            >
+              {showUndoneOnly ? 'All' : 'Undone'}
+            </button>
             {isAdmin && !resetConfirming && (
               <button
                 className={styles.resetBtn}
@@ -167,6 +175,10 @@ export default function Sidebar({
         <div className={styles.body}>
           {suburbGroups.map(({ suburb, playgrounds: pgs }) => {
             const checkedCount = pgs.filter((p) => checkedIds.has(p.id)).length
+            const visiblePgs = showUndoneOnly
+              ? pgs.filter((p) => !checkedIds.has(p.id))
+              : pgs
+            if (visiblePgs.length === 0) return null
             const isExpanded = expandedSuburbs.has(suburb)
             return (
               <div key={suburb} className={styles.suburbSection}>
@@ -186,7 +198,7 @@ export default function Sidebar({
                 </button>
                 {isExpanded && (
                   <ul className={styles.suburbList}>
-                    {pgs.map((p) => {
+                    {visiblePgs.map((p) => {
                       const checked = checkedIds.has(p.id)
                       const disabled = disabledIds.has(p.id)
                       const checkIn = checkIns.find((c) => c.id === p.id)

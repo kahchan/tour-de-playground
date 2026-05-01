@@ -4,7 +4,7 @@ Wellington playground check-off map. Riders tap a marker to check off a playgrou
 
 ## Status
 
-UI rebuild in progress (Phases 1–6). Phases 1–5 complete.
+UI rebuild complete (Phases 1–6 done).
 
 - **Frontend:** https://kahchan.github.io/tour-de-playground
 - **API Worker:** https://tour-de-playground-api.chan-kah.workers.dev
@@ -41,7 +41,8 @@ Copy `.env.example` to `.env.local` and fill in values.
 
 - **Data curation:** 111 playgrounds — needs a hand-edit pass of `public/playgrounds.json` to hide unsuitable ones. Two flagged entries: `wcc-116` (Parliament Play Area, suburb null → hand-fix to "Thorndon") and `wcc-2920` (no name from WCC source). After editing, commit the file — no Worker redeploy needed.
 - **Cloudflare stale branch:** `cloudflare/workers-autoconfig` branch on GitHub is safe to delete.
-- **Do not deploy frontend** (`npm run deploy`) until the UI rebuild phases are complete and signed off.
+- **Ready to deploy** — UI rebuild phases 1–6 complete; run `npm run deploy` when signed off.
+- **Worker needs deploying** (`cd worker && npx wrangler deploy`) for the new `/uncheck` endpoint to work in production.
 
 ## Architecture
 
@@ -102,9 +103,7 @@ See memory file `style_mirestudio.md` for full token reference.
 ### ~~Phase 3 — Floating right sidebar with suburb groups~~ ✓
 ### ~~Phase 4 — Bidirectional sidebar ↔ map sync~~ ✓
 ### ~~Phase 5 — Check-off interaction + done visual treatment~~ ✓
-
-### Phase 6 — "Show undone only" toggle *(next)*
-- Local toggle in sidebar header; hides checked rows; suburb sections with 0 left collapse or disappear
+### ~~Phase 6 — "Show undone only" toggle~~ ✓
 
 ## Extension points
 
