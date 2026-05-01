@@ -1,0 +1,890 @@
+[
+  {
+    "id": "wcc-1",
+    "name": "Botanical Gardens of Wellington Play Area",
+    "lat": -41.283481188917044,
+    "lng": 174.76550700855694,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-2",
+    "name": "Waitangi Park Play Area",
+    "lat": -41.291759337442805,
+    "lng": 174.78601061039166,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-3",
+    "name": "Johnsonville Memorial Park Play Area",
+    "lat": -41.22225191874987,
+    "lng": 174.80407081828304,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-4",
+    "name": "Shorland Park Play Area",
+    "lat": -41.34364715017136,
+    "lng": 174.77028170702897,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-5",
+    "name": "Karori Park Play Area",
+    "lat": -41.28661811194826,
+    "lng": 174.72554045392113,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-6",
+    "name": "Freyberg Pool & Beach Play Area",
+    "lat": -41.29066004157241,
+    "lng": 174.79043177271996,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-7",
+    "name": "Grasslees Reserve Play Area",
+    "lat": -41.16370445539326,
+    "lng": 174.82842318648034,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-8",
+    "name": "Te Aro Mahana play area equipment",
+    "lat": -41.28651849890481,
+    "lng": 174.77888041033037,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-9",
+    "name": "Central Park Play Area",
+    "lat": -41.29967943925748,
+    "lng": 174.76810374360252,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-10",
+    "name": "Nairnville Park Play Area",
+    "lat": -41.25114439808982,
+    "lng": 174.7855102476123,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-11",
+    "name": "Aro Valley Community Centre & Palmer Play Area",
+    "lat": -41.29521056119987,
+    "lng": 174.76893331741016,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-12",
+    "name": "Constable Street Play Area",
+    "lat": -41.31354680245611,
+    "lng": 174.78013369685993,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-13",
+    "name": "Newtown Park Play Area",
+    "lat": -41.31963018671467,
+    "lng": 174.7839120600067,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-14",
+    "name": "Holloway Road Play Area",
+    "lat": -41.29390104093775,
+    "lng": 174.76002030878362,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-15",
+    "name": "Churchill Park Play Area",
+    "lat": -41.32240466710652,
+    "lng": 174.8347841484918,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-16",
+    "name": "Wadestown Play Centre Play Area",
+    "lat": -41.26185449009994,
+    "lng": 174.77319297764106,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-17",
+    "name": "Khandallah Park Play Area",
+    "lat": -41.24156189367328,
+    "lng": 174.7877458820275,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-18",
+    "name": "Quebec Street Play Area",
+    "lat": -41.32381653832425,
+    "lng": 174.76303599569684,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-19",
+    "name": "Lyall Bay Beach Youth Centre Play Area",
+    "lat": -41.32924305809768,
+    "lng": 174.79553064594796,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-20",
+    "name": "Khandallah Library Play Area",
+    "lat": -41.24685252100929,
+    "lng": 174.79083903096372,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-21",
+    "name": "Scorching Bay Play Area",
+    "lat": -41.29719106319245,
+    "lng": 174.8327349998595,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-22",
+    "name": "Willowbank Reserve Play Area",
+    "lat": -41.184883478716344,
+    "lng": 174.8283732880979,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-23",
+    "name": "Lyndhurst Park Play Area",
+    "lat": -41.17291304956698,
+    "lng": 174.8206566182425,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-24",
+    "name": "Cuba Street Play Area",
+    "lat": -41.29233277761838,
+    "lng": 174.77627009107323,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-25",
+    "name": "Farnham Street Play Area",
+    "lat": -41.31993966402732,
+    "lng": 174.76946502797279,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-26",
+    "name": "Harrison St Play Area",
+    "lat": -41.30600912028897,
+    "lng": 174.76482337314076,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-27",
+    "name": "Mitchell Street Play Area",
+    "lat": -41.31171272264958,
+    "lng": 174.75823035104395,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-28",
+    "name": "Churton Park and Play Area",
+    "lat": -41.208713454937836,
+    "lng": 174.80500432133869,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-29",
+    "name": "John Walker Park Play Area",
+    "lat": -41.21077098832996,
+    "lng": 174.80936428297414,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-30",
+    "name": "Burbank Crescent Play Area",
+    "lat": -41.20553907113186,
+    "lng": 174.80921416353206,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-31",
+    "name": "Chorley Grove Play Area",
+    "lat": -41.21464546139131,
+    "lng": 174.80802923808835,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-32",
+    "name": "Grenada Village Play Area",
+    "lat": -41.2089062939733,
+    "lng": 174.82162701613885,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-33",
+    "name": "Grenada North Park Play Area",
+    "lat": -41.18634282252782,
+    "lng": 174.8376104418678,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-34",
+    "name": "Branscombe Street Play Area",
+    "lat": -41.21747236566901,
+    "lng": 174.80047185532527,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-35",
+    "name": "Owhiro Bay Play Area",
+    "lat": -41.3431600248086,
+    "lng": 174.75970929886049,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-38",
+    "name": "Orchy Crescent Play Area",
+    "lat": -41.34303475684091,
+    "lng": 174.7790180512725,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-39",
+    "name": "Melrose Park Play Area",
+    "lat": -41.32386613484669,
+    "lng": 174.78610218123603,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-40",
+    "name": "Hanson Street Play Area",
+    "lat": -41.31316374753155,
+    "lng": 174.77477579082895,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-41",
+    "name": "Salford Street Play Area",
+    "lat": -41.22659015949034,
+    "lng": 174.8152911474178,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-42",
+    "name": "Cheyne Walk Play Area",
+    "lat": -41.22558840426785,
+    "lng": 174.83073555122448,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-44",
+    "name": "Edgecombe Street Play Area",
+    "lat": -41.23059006999609,
+    "lng": 174.82540378006462,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-45",
+    "name": "Helston Park Play Area",
+    "lat": -41.219453092687445,
+    "lng": 174.81318178602552,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-46",
+    "name": "Kipling Street Play Area",
+    "lat": -41.22531232302041,
+    "lng": 174.79784976097858,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-47",
+    "name": "Gilbert Young Play Area",
+    "lat": -41.22933787522483,
+    "lng": 174.80351565200334,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-48",
+    "name": "Kanpur Road Play Area",
+    "lat": -41.236107338179586,
+    "lng": 174.7956385789883,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-49",
+    "name": "Krull Street Play Area",
+    "lat": -41.31360595924959,
+    "lng": 174.7690365822643,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-50",
+    "name": "Miramar North Play Area",
+    "lat": -41.303139123706515,
+    "lng": 174.82343003042206,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-51",
+    "name": "Silverstream Road Play Area",
+    "lat": -41.25269604772439,
+    "lng": 174.76114584454595,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-52",
+    "name": "Alexandra Road Play Area",
+    "lat": -41.2965203115215,
+    "lng": 174.79877870410894,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-53",
+    "name": "Waipapa Play Area",
+    "lat": -41.303698945787495,
+    "lng": 174.79568779468968,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-54",
+    "name": "Allington Road Play Area",
+    "lat": -41.29048289477095,
+    "lng": 174.71793223030767,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-55",
+    "name": "Ben Burn Park Play Area",
+    "lat": -41.28758557263775,
+    "lng": 174.73953174137026,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-56",
+    "name": "Hazlewood Avenue Play Area",
+    "lat": -41.297181768576536,
+    "lng": 174.72378971269168,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-57",
+    "name": "Montgomery Avenue Play Area",
+    "lat": -41.278575874753486,
+    "lng": 174.72685213725134,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-58",
+    "name": "Paddington Grove Play Area",
+    "lat": -41.285363745934,
+    "lng": 174.7172745500835,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-59",
+    "name": "George Denton Park Play Area",
+    "lat": -41.29567164196699,
+    "lng": 174.75225133592463,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-60",
+    "name": "Chelsea Street Play Area",
+    "lat": -41.3175634089555,
+    "lng": 174.81708944106518,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-61",
+    "name": "Wilberforce Street Play Area",
+    "lat": -41.320796058492775,
+    "lng": 174.82371396466687,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-62",
+    "name": "Akaroa Drive Play Area",
+    "lat": -41.30670827227992,
+    "lng": 174.81819332531393,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-63",
+    "name": "Kilbirnie Play Area",
+    "lat": -41.31664556147641,
+    "lng": 174.7949756715776,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-64",
+    "name": "Crawford Green Park Play Area",
+    "lat": -41.32390780331787,
+    "lng": 174.8155819885985,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-65",
+    "name": "Cummings Park Play Area",
+    "lat": -41.24786661329343,
+    "lng": 174.77370067637239,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-66",
+    "name": "Creswick Terrace Play Area",
+    "lat": -41.28286951893737,
+    "lng": 174.754815904508,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-67",
+    "name": "The Crescent Play Area",
+    "lat": -41.28910957048022,
+    "lng": 174.80014072885305,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-68",
+    "name": "Breaker Bay Play Area",
+    "lat": -41.33743543697867,
+    "lng": 174.8239610109812,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-69",
+    "name": "Kekerenga Street Play Area",
+    "lat": -41.33619331397882,
+    "lng": 174.81372343235174,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-70",
+    "name": "Monorgan Park Play Area",
+    "lat": -41.33008636623278,
+    "lng": 174.81874972452408,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-71",
+    "name": "Nuku Street Play Area",
+    "lat": -41.330382878658774,
+    "lng": 174.8171620355679,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-72",
+    "name": "Taiaroa Street Play Area",
+    "lat": -41.33340722010986,
+    "lng": 174.8171123101571,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-73",
+    "name": "Coronation Park Play Area",
+    "lat": -41.17154671642115,
+    "lng": 174.82632450039395,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-74",
+    "name": "Duncan Park Play Area",
+    "lat": -41.15764750764061,
+    "lng": 174.82997966092432,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-75",
+    "name": "Tui Park Play Area",
+    "lat": -41.15637248364697,
+    "lng": 174.8352676939809,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-76",
+    "name": "Victory Crescent Park Play Area",
+    "lat": -41.16328822668559,
+    "lng": 174.82392287492888,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-77",
+    "name": "Wall Park Play Area",
+    "lat": -41.14992732347099,
+    "lng": 174.83985478669084,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-78",
+    "name": "Pembroke Road/Monmouth Way Play Area",
+    "lat": -41.271055381303164,
+    "lng": 174.76260095696574,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-79",
+    "name": "Surrey Street Play Area",
+    "lat": -41.27134747627963,
+    "lng": 174.7553943339475,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-80",
+    "name": "Warwick Street Play Area",
+    "lat": -41.26906102947543,
+    "lng": 174.75956236036478,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-81",
+    "name": "Izard Park Play Area",
+    "lat": -41.26514159073018,
+    "lng": 174.76275597184514,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-82",
+    "name": "Elizabeth Street Play Area",
+    "lat": -41.29676700416373,
+    "lng": 174.7857954157039,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-84",
+    "name": "Brasenose Place Play Area",
+    "lat": -41.18166377678987,
+    "lng": 174.81498021640877,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-85",
+    "name": "Homebush Park Play Area",
+    "lat": -41.24990195570885,
+    "lng": 174.80740107624808,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-86",
+    "name": "Pirie Street Play Area",
+    "lat": -41.298857978506035,
+    "lng": 174.78910740293676,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-87",
+    "name": "Treasure Island/Kainui Reserve Play Area",
+    "lat": -41.30279290270843,
+    "lng": 174.80167031756173,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-88",
+    "name": "Katherine Mansfield Park Play Area",
+    "lat": -41.27139861171225,
+    "lng": 174.77976251008533,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-89",
+    "name": "Raroa Park and Play Area",
+    "lat": -41.16322070873252,
+    "lng": 174.84070426678747,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-90",
+    "name": "Kentwood Drive Play Area",
+    "lat": -41.21521136112084,
+    "lng": 174.83034426557728,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-95",
+    "name": "Pikitanga Close Play Area",
+    "lat": -41.17136845289671,
+    "lng": 174.83251827077342,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-96",
+    "name": "Cobblestone Park Play Area",
+    "lat": -41.295315734297084,
+    "lng": 174.77589518714316,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-97",
+    "name": "Amesbury Drive Play area",
+    "lat": -41.19931510332458,
+    "lng": 174.8025307288009,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-99",
+    "name": "Mt Cook Play Area",
+    "lat": -41.30725471940493,
+    "lng": 174.77465217961995,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-101",
+    "name": "Makara School Play Area",
+    "lat": -41.268013610259665,
+    "lng": 174.70518305705522,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-105",
+    "name": "Kelburn Park Play Area",
+    "lat": -41.28487259941602,
+    "lng": 174.7697348573618,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-106",
+    "name": "Jeypore Street Play Area",
+    "lat": -41.32198772431094,
+    "lng": 174.7734023369861,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-107",
+    "name": "Seatoun Park Play Area",
+    "lat": -41.32489928773479,
+    "lng": 174.83471884293448,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-108",
+    "name": "Larsen Park Play Area",
+    "lat": -41.174749275522394,
+    "lng": 174.81597749482316,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-109",
+    "name": "Taylor Park Play Area",
+    "lat": -41.17613264732518,
+    "lng": 174.82775231273692,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-110",
+    "name": "Glamorgan Street Play Area",
+    "lat": -41.274229566704896,
+    "lng": 174.7624837466846,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-111",
+    "name": "Tawhai Raunui Play Area",
+    "lat": -41.21608716503889,
+    "lng": 174.83677049834307,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-112",
+    "name": "Vice Regal Play Area",
+    "lat": -41.30863278073719,
+    "lng": 174.78507689861502,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-113",
+    "name": "Vogelmorn Park Play Area",
+    "lat": -41.31682717991299,
+    "lng": 174.76430457761919,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-114",
+    "name": "Lyndfield Lane Play Area",
+    "lat": -41.23136045311342,
+    "lng": 174.81829061871017,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-115",
+    "name": "Te Papa Takaro o Jim Belich (Jim Belich Playground)",
+    "lat": -41.32691253630888,
+    "lng": 174.77488032843664,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-116",
+    "name": "Parliament Play Area",
+    "lat": -41.27813103047322,
+    "lng": 174.77754149897598,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-117",
+    "name": "Carrara Park Play Area",
+    "lat": -41.315370552375846,
+    "lng": 174.78390589902406,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-119",
+    "name": "Southgate Park Play Area",
+    "lat": -41.33428834492797,
+    "lng": 174.7820892720186,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-120",
+    "name": "Pukehuia Park playground Newlands",
+    "lat": -41.224147553402545,
+    "lng": 174.82247440083074,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-520",
+    "name": "Matairangi Nature Trail",
+    "lat": -41.300847325256065,
+    "lng": 174.78981004058758,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-920",
+    "name": "Korimako Play area",
+    "lat": -41.19239017515968,
+    "lng": 174.80966701852694,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-2120",
+    "name": "Houghton Bay Road Play Area",
+    "lat": -41.33860347082927,
+    "lng": 174.78659794797224,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-2520",
+    "name": "Flinders Place Playground",
+    "lat": -41.21846685306751,
+    "lng": 174.79345815613445,
+    "source": "wcc",
+    "included": true
+  },
+  {
+    "id": "wcc-2920",
+    "name": "Playground 2920",
+    "lat": -41.31847690455695,
+    "lng": 174.78674150854815,
+    "source": "wcc",
+    "included": true
+  }
+]
