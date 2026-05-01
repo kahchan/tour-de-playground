@@ -32,7 +32,11 @@ export default function NamePrompt({ onSubmit, onClose }: Props) {
             autoFocus
             maxLength={30}
           />
-          <button className={styles.saveBtn} type="submit" disabled={!value.trim()}>
+          <button
+            className={styles.saveBtn}
+            type="submit"
+            disabled={!value.trim()}
+          >
             Save
           </button>
         </form>

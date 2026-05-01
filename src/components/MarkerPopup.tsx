@@ -9,11 +9,21 @@ interface Props {
   onClose: () => void
 }
 
-export default function MarkerPopup({ playground, checkIn, yourName, onCheckOff, onClose }: Props) {
+export default function MarkerPopup({
+  playground,
+  checkIn,
+  yourName,
+  onCheckOff,
+  onClose,
+}: Props) {
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
-        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
+        <button
+          className={styles.closeBtn}
+          onClick={onClose}
+          aria-label="Close"
+        >
           ×
         </button>
         <div className={styles.name}>{playground.name}</div>

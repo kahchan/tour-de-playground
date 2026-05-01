@@ -19,7 +19,10 @@ interface Props {
 
 const WELLINGTON: [number, number] = [174.7762, -41.2865]
 
-function toGeoJSON(playgrounds: Playground[], checkedIds: Set<string>): FeatureCollection {
+function toGeoJSON(
+  playgrounds: Playground[],
+  checkedIds: Set<string>,
+): FeatureCollection {
   return {
     type: 'FeatureCollection',
     features: playgrounds.map((p) => ({
@@ -30,7 +33,12 @@ function toGeoJSON(playgrounds: Playground[], checkedIds: Set<string>): FeatureC
   }
 }
 
-export default function MapView({ playgrounds, checkedIds, onMarkerClick, flyToTarget }: Props) {
+export default function MapView({
+  playgrounds,
+  checkedIds,
+  onMarkerClick,
+  flyToTarget,
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const onClickRef = useRef(onMarkerClick)
@@ -101,7 +109,11 @@ export default function MapView({ playgrounds, checkedIds, onMarkerClick, flyToT
         id: 'unchecked',
         type: 'circle',
         source: 'playgrounds',
-        filter: ['all', ['!', ['has', 'point_count']], ['!=', ['get', 'checked'], true]],
+        filter: [
+          'all',
+          ['!', ['has', 'point_count']],
+          ['!=', ['get', 'checked'], true],
+        ],
         paint: {
           'circle-radius': 9,
           'circle-color': '#3B82F6',
@@ -114,7 +126,11 @@ export default function MapView({ playgrounds, checkedIds, onMarkerClick, flyToT
         id: 'checked',
         type: 'circle',
         source: 'playgrounds',
-        filter: ['all', ['!', ['has', 'point_count']], ['==', ['get', 'checked'], true]],
+        filter: [
+          'all',
+          ['!', ['has', 'point_count']],
+          ['==', ['get', 'checked'], true],
+        ],
         paint: {
           'circle-radius': 11,
           'circle-color': '#22C55E',
@@ -133,11 +149,16 @@ export default function MapView({ playgrounds, checkedIds, onMarkerClick, flyToT
       }
 
       map.on('click', 'clusters', (e) => {
-        const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] })
+        const features = map.queryRenderedFeatures(e.point, {
+          layers: ['clusters'],
+        })
         if (!features.length) return
         const clusterId = features[0].properties.cluster_id as number
         const source = map.getSource('playgrounds') as maplibregl.GeoJSONSource
-        const coords = (features[0].geometry as GeoJSON.Point).coordinates as [number, number]
+        const coords = (features[0].geometry as GeoJSON.Point).coordinates as [
+          number,
+          number,
+        ]
         source.getClusterExpansionZoom(clusterId).then((zoom) => {
           map.easeTo({ center: coords, zoom })
         })
@@ -165,7 +186,9 @@ export default function MapView({ playgrounds, checkedIds, onMarkerClick, flyToT
 
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return
-    const source = mapRef.current.getSource('playgrounds') as maplibregl.GeoJSONSource | undefined
+    const source = mapRef.current.getSource('playgrounds') as
+      | maplibregl.GeoJSONSource
+      | undefined
     source?.setData(toGeoJSON(playgrounds, checkedIds))
   }, [playgrounds, checkedIds, mapLoaded])
 

@@ -8,7 +8,11 @@ interface Props {
 
 export default function Counter({ total, visited, onToggle }: Props) {
   return (
-    <button className={styles.counter} onClick={onToggle} aria-label="Toggle playground list">
+    <button
+      className={styles.counter}
+      onClick={onToggle}
+      aria-label="Toggle playground list"
+    >
       ☰ {visited} / {total}
     </button>
   )

@@ -18,22 +18,22 @@ Both phases are complete and deployed.
 
 ## Commands
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Local dev server |
-| `npm run build` | Production build |
-| `npm run preview` | Preview production build |
-| `npm run lint` | ESLint + Prettier check |
-| `npm run deploy` | Deploy frontend to GitHub Pages |
-| `npm run refresh-data` | Regenerate `playgrounds.json` from WCC feed |
-| `cd worker && npx wrangler deploy` | Deploy API Worker to Cloudflare |
+| Command                            | Purpose                                     |
+| ---------------------------------- | ------------------------------------------- |
+| `npm run dev`                      | Local dev server                            |
+| `npm run build`                    | Production build                            |
+| `npm run preview`                  | Preview production build                    |
+| `npm run lint`                     | ESLint + Prettier check                     |
+| `npm run deploy`                   | Deploy frontend to GitHub Pages             |
+| `npm run refresh-data`             | Regenerate `playgrounds.json` from WCC feed |
+| `cd worker && npx wrangler deploy` | Deploy API Worker to Cloudflare             |
 
 ## Env vars
 
-| Var | Purpose |
-|---|---|
+| Var                 | Purpose                                   |
+| ------------------- | ----------------------------------------- |
 | `VITE_MAPTILER_KEY` | MapTiler API key (required for map tiles) |
-| `VITE_WORKER_URL` | Cloudflare Worker base URL |
+| `VITE_WORKER_URL`   | Cloudflare Worker base URL                |
 
 Copy `.env.example` to `.env.local` and fill in values.
 
@@ -77,13 +77,13 @@ Copy `.env.example` to `.env.local` and fill in values.
 
 ## Extension points
 
-| Version | Feature |
-|---|---|
-| v2 | Geofence: only allow check-off within 50m via browser geolocation |
-| v2 | Per-rider stats (your count, your last check-off) |
-| Later | Offline tile caching via Service Worker (Cache API) — useful for on-ride use where connectivity is unreliable |
-| Later | `?room=xyz` for per-group sessions |
-| Later | Photo upload on check-off |
-| Later | Swap MapTiler for self-hosted Protomaps tiles |
-| Later | Suburbs / area filters |
-| Later | Routing suggestions |
+| Version | Feature                                                                                                       |
+| ------- | ------------------------------------------------------------------------------------------------------------- |
+| v2      | Geofence: only allow check-off within 50m via browser geolocation                                             |
+| v2      | Per-rider stats (your count, your last check-off)                                                             |
+| Later   | Offline tile caching via Service Worker (Cache API) — useful for on-ride use where connectivity is unreliable |
+| Later   | `?room=xyz` for per-group sessions                                                                            |
+| Later   | Photo upload on check-off                                                                                     |
+| Later   | Swap MapTiler for self-hosted Protomaps tiles                                                                 |
+| Later   | Suburbs / area filters                                                                                        |
+| Later   | Routing suggestions                                                                                           |

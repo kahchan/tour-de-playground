@@ -7,7 +7,9 @@ interface Props {
 
 export default function ResetPanel({ onReset }: Props) {
   const [value, setValue] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>(
+    'idle',
+  )
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -45,7 +47,9 @@ export default function ResetPanel({ onReset }: Props) {
             {status === 'loading' ? 'Resetting…' : 'Reset'}
           </button>
           {status === 'error' && (
-            <div className={styles.error}>Wrong passphrase or server error.</div>
+            <div className={styles.error}>
+              Wrong passphrase or server error.
+            </div>
           )}
         </form>
       )}
