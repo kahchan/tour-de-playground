@@ -1,0 +1,68 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.modal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 380px;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.375rem;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 1.25rem;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  box-sizing: border-box;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.saveBtn {
+  width: 100%;
+  padding: 0.875rem;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.saveBtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.saveBtn:not(:disabled):active {
+  background: #2563eb;
+}

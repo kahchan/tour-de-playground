@@ -1,0 +1,23 @@
+.badge {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #444;
+  z-index: 10;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.changeBtn {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
