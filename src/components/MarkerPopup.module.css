@@ -64,3 +64,21 @@
 .checkBtn:active {
   background: #2563eb;
 }
+
+.undoBtn {
+  width: 100%;
+  padding: 0.875rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 0.5rem;
+}
+
+.undoBtn:active {
+  background: #e5e7eb;
+}

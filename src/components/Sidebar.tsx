@@ -8,7 +8,7 @@ interface Props {
   checkedIds: Set<string>
   isOpen: boolean
   onClose: () => void
-  onSelect: (playground: Playground) => void
+  onToggleCheck: (id: string) => void
   isAdmin: boolean
   disabledIds: Set<string>
   onToggleDisabled: (id: string, on: boolean) => void
@@ -27,7 +27,7 @@ export default function Sidebar({
   checkedIds,
   isOpen,
   onClose,
-  onSelect,
+  onToggleCheck,
   isAdmin,
   disabledIds,
   onToggleDisabled,
@@ -210,7 +210,7 @@ export default function Sidebar({
                           >
                             <button
                               className={styles.itemMain}
-                              onClick={() => !disabled && onSelect(p)}
+                              onClick={() => !disabled && onToggleCheck(p.id)}
                               disabled={disabled && !isAdmin}
                             >
                               <span

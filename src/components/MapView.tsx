@@ -134,12 +134,31 @@ export default function MapView({
         paint: {
           'circle-radius': 11,
           'circle-color': '#22C55E',
-          'circle-stroke-width': 2.5,
+          'circle-stroke-width': 2,
           'circle-stroke-color': '#fff',
+          'circle-opacity': 0.5,
+          'circle-stroke-opacity': 0.5,
         },
       })
 
-      for (const layer of ['clusters', 'unchecked', 'checked']) {
+      map.addLayer({
+        id: 'checked-tick',
+        type: 'symbol',
+        source: 'playgrounds',
+        filter: [
+          'all',
+          ['!', ['has', 'point_count']],
+          ['==', ['get', 'checked'], true],
+        ],
+        layout: {
+          'text-field': '✓',
+          'text-size': 11,
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+        },
+        paint: { 'text-color': '#fff', 'text-opacity': 0.8 },
+      })
+
+      for (const layer of ['clusters', 'unchecked', 'checked', 'checked-tick']) {
         map.on('mouseenter', layer, () => {
           map.getCanvas().style.cursor = 'pointer'
         })
@@ -164,7 +183,7 @@ export default function MapView({
         })
       })
 
-      for (const layer of ['unchecked', 'checked']) {
+      for (const layer of ['unchecked', 'checked', 'checked-tick']) {
         map.on('click', layer, (e) => {
           const feature = e.features?.[0]
           if (!feature) return

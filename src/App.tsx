@@ -17,7 +17,7 @@ const isAdmin = params.has('admin')
 
 export default function App() {
   const [playgrounds, setPlaygrounds] = useState<Playground[]>([])
-  const { checkIns, addCheckIn, disabledIds, toggleDisabled, resetAll, error } =
+  const { checkIns, addCheckIn, removeCheckIn, disabledIds, toggleDisabled, resetAll, error } =
     useCheckIns()
   const { name, setName } = useName()
   const [selected, setSelected] = useState<Playground | null>(null)
@@ -54,7 +54,18 @@ export default function App() {
     [checkIns],
   )
 
-  function handleCheckOff() {
+  function handleToggleCheck(id: string) {
+    if (checkedIds.has(id)) {
+      removeCheckIn(id)
+    } else if (!name) {
+      setPendingId(id)
+      setShowNamePrompt(true)
+    } else {
+      addCheckIn(id, name)
+    }
+  }
+
+  function handlePopupCheckOff() {
     if (!selected) return
     if (!name) {
       setPendingId(selected.id)
@@ -63,6 +74,12 @@ export default function App() {
       addCheckIn(selected.id, name)
       setSelected(null)
     }
+  }
+
+  function handlePopupUndo() {
+    if (!selected) return
+    removeCheckIn(selected.id)
+    setSelected(null)
   }
 
   function handleNameSubmit(n: string) {
@@ -79,12 +96,6 @@ export default function App() {
     setSelected(playground)
     setSidebarOpen(true)
     setSidebarHighlight((prev) => ({ id: playground.id, seq: (prev?.seq ?? 0) + 1 }))
-  }
-
-  function handleSidebarSelect(playground: Playground) {
-    if (window.innerWidth < 640) setSidebarOpen(false)
-    setFlyToTarget({ lat: playground.lat, lng: playground.lng })
-    setSelected(playground)
   }
 
   async function handleReset(passphrase: string) {
@@ -112,7 +123,7 @@ export default function App() {
         checkedIds={checkedIds}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onSelect={handleSidebarSelect}
+        onToggleCheck={handleToggleCheck}
         isAdmin={isAdmin}
         disabledIds={disabledIds}
         onToggleDisabled={toggleDisabled}
@@ -132,7 +143,8 @@ export default function App() {
           playground={selected}
           checkIn={checkIns.find((c) => c.id === selected.id) ?? null}
           yourName={name}
-          onCheckOff={handleCheckOff}
+          onCheckOff={handlePopupCheckOff}
+          onUndo={handlePopupUndo}
           onClose={() => setSelected(null)}
         />
       )}

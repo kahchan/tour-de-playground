@@ -6,6 +6,7 @@ interface Props {
   checkIn: CheckIn | null
   yourName: string | null
   onCheckOff: () => void
+  onUndo: () => void
   onClose: () => void
 }
 
@@ -14,28 +15,30 @@ export default function MarkerPopup({
   checkIn,
   yourName,
   onCheckOff,
+  onUndo,
   onClose,
 }: Props) {
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
-        <button
-          className={styles.closeBtn}
-          onClick={onClose}
-          aria-label="Close"
-        >
+        <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
           ×
         </button>
         <div className={styles.name}>{playground.name}</div>
         {checkIn ? (
-          <div className={styles.checked}>✓ Visited by {checkIn.name}</div>
+          <>
+            <div className={styles.checked}>✓ Visited by {checkIn.name}</div>
+            <button className={styles.undoBtn} onClick={onUndo}>
+              Undo
+            </button>
+          </>
         ) : (
           <>
             {yourName && (
               <div className={styles.checkAs}>Checking as: {yourName}</div>
             )}
             <button className={styles.checkBtn} onClick={onCheckOff}>
-              Check off!
+              Mark done
             </button>
           </>
         )}

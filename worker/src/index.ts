@@ -115,6 +115,22 @@ export default {
       return Response.json({ ok: true }, { headers })
     }
 
+    if (request.method === 'POST' && pathname === '/uncheck') {
+      const body = await request.json<{ id?: string }>()
+      if (!body.id) {
+        return Response.json({ error: 'id required' }, { status: 400, headers })
+      }
+
+      const state = await getState(env)
+      const before = state.checks.length
+      state.checks = state.checks.filter((c) => c.id !== body.id)
+      if (state.checks.length !== before) {
+        state.lastModified = new Date().toISOString()
+        await putState(env, state)
+      }
+      return Response.json({ ok: true }, { headers })
+    }
+
     if (request.method === 'POST' && pathname === '/reset') {
       const body = await request.json<{ passphrase?: string }>()
       if (body.passphrase !== env.RESET_PASSPHRASE) {

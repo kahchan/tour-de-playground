@@ -82,6 +82,32 @@ export function useCheckIns() {
     }
   }
 
+  async function removeCheckIn(id: string) {
+    if (!workerUrl) {
+      setCheckIns((prev) => {
+        const next = prev.filter((c) => c.id !== id)
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(next))
+        return next
+      })
+      return
+    }
+
+    setCheckIns((prev) => prev.filter((c) => c.id !== id))
+
+    try {
+      const res = await fetch(`${workerUrl}/uncheck`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) throw new Error(`${res.status}`)
+      await fetchState()
+    } catch {
+      flashError('Undo failed — are you online?')
+      await fetchState()
+    }
+  }
+
   async function toggleDisabled(id: string, on: boolean) {
     // Optimistic update
     setDisabledIds((prev) => {
@@ -129,5 +155,5 @@ export function useCheckIns() {
     lastModifiedRef.current = null // force re-fetch on next poll
   }
 
-  return { checkIns, addCheckIn, disabledIds, toggleDisabled, resetAll, error }
+  return { checkIns, addCheckIn, removeCheckIn, disabledIds, toggleDisabled, resetAll, error }
 }
