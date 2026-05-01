@@ -11,6 +11,7 @@ interface CheckIn {
 
 interface State {
   checks: CheckIn[]
+  disabled: string[]
   lastModified: string
 }
 
@@ -33,8 +34,12 @@ function corsHeaders(origin: string): Record<string, string> {
 
 async function getState(env: Env): Promise<State> {
   const raw = await env.STATE.get(KV_KEY)
-  if (!raw) return { checks: [], lastModified: new Date().toISOString() }
-  return JSON.parse(raw) as State
+  if (!raw)
+    return { checks: [], disabled: [], lastModified: new Date().toISOString() }
+  const parsed = JSON.parse(raw) as State
+  // Guard against old state that predates the disabled field
+  if (!parsed.disabled) parsed.disabled = []
+  return parsed
 }
 
 async function putState(env: Env, state: State): Promise<void> {
@@ -62,7 +67,10 @@ export default {
     if (request.method === 'POST' && pathname === '/check') {
       const body = await request.json<{ id?: string; name?: string }>()
       if (!body.id || !body.name) {
-        return Response.json({ error: 'id and name required' }, { status: 400, headers })
+        return Response.json(
+          { error: 'id and name required' },
+          { status: 400, headers },
+        )
       }
 
       const state = await getState(env)
@@ -71,21 +79,53 @@ export default {
         return Response.json(existing, { headers })
       }
 
-      const checkIn: CheckIn = { id: body.id, name: body.name, ts: new Date().toISOString() }
+      const checkIn: CheckIn = {
+        id: body.id,
+        name: body.name,
+        ts: new Date().toISOString(),
+      }
       state.checks.push(checkIn)
       state.lastModified = checkIn.ts
       await putState(env, state)
       return Response.json(checkIn, { headers })
     }
 
+    if (request.method === 'POST' && pathname === '/disable') {
+      const body = await request.json<{ id?: string; on?: boolean }>()
+      if (!body.id || typeof body.on !== 'boolean') {
+        return Response.json(
+          { error: 'id and on required' },
+          { status: 400, headers },
+        )
+      }
+
+      const state = await getState(env)
+      const wasDisabled = state.disabled.includes(body.id)
+
+      if (body.on && !wasDisabled) {
+        state.disabled.push(body.id)
+        state.lastModified = new Date().toISOString()
+        await putState(env, state)
+      } else if (!body.on && wasDisabled) {
+        state.disabled = state.disabled.filter((id) => id !== body.id)
+        state.lastModified = new Date().toISOString()
+        await putState(env, state)
+      }
+
+      return Response.json({ ok: true }, { headers })
+    }
+
     if (request.method === 'POST' && pathname === '/reset') {
       const body = await request.json<{ passphrase?: string }>()
       if (body.passphrase !== env.RESET_PASSPHRASE) {
-        return Response.json({ error: 'wrong passphrase' }, { status: 403, headers })
+        return Response.json(
+          { error: 'wrong passphrase' },
+          { status: 403, headers },
+        )
       }
 
       const now = new Date().toISOString()
-      await putState(env, { checks: [], lastModified: now })
+      await putState(env, { checks: [], disabled: [], lastModified: now })
       return Response.json({ ok: true, lastModified: now }, { headers })
     }
 

@@ -11,27 +11,44 @@ import Sidebar from './components/Sidebar'
 import ResetPanel from './components/ResetPanel'
 import styles from './App.module.css'
 
-const isResetMode = new URLSearchParams(window.location.search).has('reset')
-const workerUrl = import.meta.env.VITE_WORKER_URL as string | undefined
+const params = new URLSearchParams(window.location.search)
+const isResetMode = params.has('reset')
+const isAdmin = params.has('admin')
 
 export default function App() {
   const [playgrounds, setPlaygrounds] = useState<Playground[]>([])
-  const { checkIns, addCheckIn, error } = useCheckIns()
+  const { checkIns, addCheckIn, disabledIds, toggleDisabled, resetAll, error } =
+    useCheckIns()
   const { name, setName } = useName()
   const [selected, setSelected] = useState<Playground | null>(null)
   const [showNamePrompt, setShowNamePrompt] = useState(false)
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [flyToTarget, setFlyToTarget] = useState<{ lat: number; lng: number } | null>(null)
+  const [flyToTarget, setFlyToTarget] = useState<{
+    lat: number
+    lng: number
+  } | null>(null)
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}playgrounds.json`)
       .then((r) => r.json())
-      .then((data: Playground[]) => setPlaygrounds(data.filter((p) => p.included)))
+      .then((data: Playground[]) =>
+        setPlaygrounds(data.filter((p) => p.included)),
+      )
       .catch((err) => console.error('Failed to load playgrounds:', err))
   }, [])
 
-  const checkedIds = useMemo(() => new Set(checkIns.map((c) => c.id)), [checkIns])
+  // In non-admin mode, hide disabled playgrounds entirely
+  const visiblePlaygrounds = useMemo(
+    () =>
+      isAdmin ? playgrounds : playgrounds.filter((p) => !disabledIds.has(p.id)),
+    [playgrounds, disabledIds],
+  )
+
+  const checkedIds = useMemo(
+    () => new Set(checkIns.map((c) => c.id)),
+    [checkIns],
+  )
 
   function handleCheckOff() {
     if (!selected) return
@@ -61,8 +78,9 @@ export default function App() {
   }
 
   async function handleReset(passphrase: string) {
-    if (!workerUrl) throw new Error('No worker URL configured')
-    const res = await fetch(`${workerUrl}/reset`, {
+    if (!import.meta.env.VITE_WORKER_URL)
+      throw new Error('No worker URL configured')
+    const res = await fetch(`${import.meta.env.VITE_WORKER_URL}/reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ passphrase }),
@@ -73,21 +91,25 @@ export default function App() {
   return (
     <div className={styles.app}>
       <MapView
-        playgrounds={playgrounds}
+        playgrounds={visiblePlaygrounds}
         checkedIds={checkedIds}
         onMarkerClick={setSelected}
         flyToTarget={flyToTarget}
       />
       <Sidebar
-        playgrounds={playgrounds}
+        playgrounds={visiblePlaygrounds}
         checkIns={checkIns}
         checkedIds={checkedIds}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onSelect={handleSidebarSelect}
+        isAdmin={isAdmin}
+        disabledIds={disabledIds}
+        onToggleDisabled={toggleDisabled}
+        onAdminReset={resetAll}
       />
       <Counter
-        total={playgrounds.length}
+        total={visiblePlaygrounds.length}
         visited={checkedIds.size}
         onToggle={() => setSidebarOpen((o) => !o)}
       />
