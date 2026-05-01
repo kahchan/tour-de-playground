@@ -8,11 +8,15 @@ import NameBadge from './components/NameBadge'
 import MarkerPopup from './components/MarkerPopup'
 import NamePrompt from './components/NamePrompt'
 import Sidebar from './components/Sidebar'
+import ResetPanel from './components/ResetPanel'
 import styles from './App.module.css'
+
+const isResetMode = new URLSearchParams(window.location.search).has('reset')
+const workerUrl = import.meta.env.VITE_WORKER_URL as string | undefined
 
 export default function App() {
   const [playgrounds, setPlaygrounds] = useState<Playground[]>([])
-  const { checkIns, addCheckIn } = useCheckIns()
+  const { checkIns, addCheckIn, error } = useCheckIns()
   const { name, setName } = useName()
   const [selected, setSelected] = useState<Playground | null>(null)
   const [showNamePrompt, setShowNamePrompt] = useState(false)
@@ -56,6 +60,16 @@ export default function App() {
     setSelected(playground)
   }
 
+  async function handleReset(passphrase: string) {
+    if (!workerUrl) throw new Error('No worker URL configured')
+    const res = await fetch(`${workerUrl}/reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passphrase }),
+    })
+    if (!res.ok) throw new Error(`${res.status}`)
+  }
+
   return (
     <div className={styles.app}>
       <MapView
@@ -78,7 +92,9 @@ export default function App() {
         onToggle={() => setSidebarOpen((o) => !o)}
       />
       <NameBadge name={name} onChangeName={() => setShowNamePrompt(true)} />
-      {selected && !showNamePrompt && (
+      {error && <div className={styles.errorBanner}>{error}</div>}
+      {isResetMode && <ResetPanel onReset={handleReset} />}
+      {selected && !showNamePrompt && !isResetMode && (
         <MarkerPopup
           playground={selected}
           checkIn={checkIns.find((c) => c.id === selected.id) ?? null}
