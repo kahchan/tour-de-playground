@@ -14,18 +14,23 @@ const WCC_ENDPOINT =
 
 async function fetchPlaygrounds() {
   const res = await fetch(WCC_ENDPOINT)
-  if (!res.ok) throw new Error(`WCC fetch failed: ${res.status} ${res.statusText}`)
+  if (!res.ok)
+    throw new Error(`WCC fetch failed: ${res.status} ${res.statusText}`)
   return res.json()
 }
 
 function toPlayground(feature) {
   const { properties, geometry } = feature
   const [lng, lat] = geometry.coordinates
+  const suburb = properties.Within_Location
+    ? (properties.Within_Location.split('\\')[1] ?? null)
+    : null
   return {
     id: `wcc-${properties.OBJECTID}`,
     name: properties.Asset_Description ?? `Playground ${properties.OBJECTID}`,
     lat,
     lng,
+    suburb,
     source: 'wcc',
     included: true,
   }
@@ -53,9 +58,17 @@ function merge(existing, incoming) {
       added.push(fresh.name)
       return fresh
     }
-    // Preserve included flag and any hand-edits; take fresh coords/name from source
-    const next = { ...fresh, included: prev.included }
-    if (prev.name !== fresh.name || prev.lat !== fresh.lat || prev.lng !== fresh.lng) {
+    // Preserve included flag and hand-edited suburb (only override suburb if source has one)
+    const next = {
+      ...fresh,
+      included: prev.included,
+      suburb: fresh.suburb ?? prev.suburb ?? null,
+    }
+    if (
+      prev.name !== fresh.name ||
+      prev.lat !== fresh.lat ||
+      prev.lng !== fresh.lng
+    ) {
       updated.push(fresh.name)
     }
     return next
@@ -104,14 +117,18 @@ async function main() {
   if (added.length) added.forEach((n) => console.log(`      ${n}`))
   console.log(`  ~ ${updated.length} updated (coords/name from source)`)
   if (updated.length) updated.forEach((n) => console.log(`      ${n}`))
-  console.log(`  - ${removed.length} removed from source (marked included: false)`)
+  console.log(
+    `  - ${removed.length} removed from source (marked included: false)`,
+  )
   if (removed.length) removed.forEach((n) => console.log(`      ${n}`))
   console.log(
     `\n  Total: ${merged.length} playgrounds` +
       ` (${merged.filter((p) => p.included).length} included)`,
   )
   console.log(`\nWritten to ${OUTPUT_PATH}`)
-  console.log('Review the diff, then: git add public/playgrounds.json && git commit')
+  console.log(
+    'Review the diff, then: git add public/playgrounds.json && git commit',
+  )
 }
 
 main().catch((err) => {

@@ -3,6 +3,7 @@ export interface Playground {
   name: string
   lat: number
   lng: number
+  suburb: string | null
   source: string
   included: boolean
 }
