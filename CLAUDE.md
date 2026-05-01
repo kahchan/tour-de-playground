@@ -39,10 +39,8 @@ Copy `.env.example` to `.env.local` and fill in values.
 
 ## Known issues / next tasks
 
-- **Data curation:** 111 playgrounds — needs a hand-edit pass of `public/playgrounds.json` to hide unsuitable ones. Two flagged entries: `wcc-116` (Parliament Play Area, suburb null → hand-fix to "Thorndon") and `wcc-2920` (no name from WCC source). After editing, commit the file — no Worker redeploy needed.
+- **Data curation:** 111 playgrounds — needs a hand-edit pass of `public/playgrounds.json` to hide unsuitable ones. Two flagged entries: `wcc-116` (Parliament Play Area, suburb null → hand-fix to "Thorndon") and `wcc-2920` (no name from WCC source). After editing, commit and push — no Worker redeploy needed.
 - **Cloudflare stale branch:** `cloudflare/workers-autoconfig` branch on GitHub is safe to delete.
-- **Ready to deploy** — UI rebuild phases 1–6 complete; run `npm run deploy` when signed off.
-- **Worker needs deploying** (`cd worker && npx wrangler deploy`) for the new `/uncheck` endpoint to work in production.
 
 ## Architecture
 
@@ -59,6 +57,7 @@ Copy `.env.example` to `.env.local` and fill in values.
 
 - Single KV key `state:current` holds `{ checks: [...], disabled: [...], lastModified: "..." }`.
 - `POST /check` — idempotent on `id`, safe to retry.
+- `POST /uncheck` — removes a check-in by `id`, idempotent.
 - `POST /disable` — `{ id, on: boolean }`, adds/removes from `disabled[]`, idempotent.
 - `POST /reset` — passphrase-protected; clears both `checks` and `disabled`.
 - CORS restricted to `https://kahchan.github.io` and localhost.
@@ -94,16 +93,6 @@ Copy `.env.example` to `.env.local` and fill in values.
 - Functional React components only; `useState` / `useEffect` for state — no external state library
 - Plain CSS modules — no CSS framework unless agreed
 - Ask before installing any library beyond React, MapLibre, and build tooling
-
-## UI rebuild plan (Phases 5–6 remaining)
-
-Style reference: mire·studio — dark canvas, vibrant color blocks, 25px radius, compact density.
-See memory file `style_mirestudio.md` for full token reference.
-
-### ~~Phase 3 — Floating right sidebar with suburb groups~~ ✓
-### ~~Phase 4 — Bidirectional sidebar ↔ map sync~~ ✓
-### ~~Phase 5 — Check-off interaction + done visual treatment~~ ✓
-### ~~Phase 6 — "Show undone only" toggle~~ ✓
 
 ## Extension points
 
