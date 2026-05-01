@@ -32,6 +32,7 @@ export function useCheckIns() {
       if (data.lastModified !== lastModifiedRef.current) {
         lastModifiedRef.current = data.lastModified
         setCheckIns(data.checks)
+        localStorage.setItem(LOCAL_KEY, JSON.stringify(data.checks))
       }
     } catch {
       // silent — offline or Worker down; stale state is fine
