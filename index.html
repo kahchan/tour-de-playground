@@ -8,8 +8,18 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>Tour de Playground</title>
-    <script type="module" crossorigin src="/tour-de-playground/assets/index-ErFlSaOV.js"></script>
-    <link rel="stylesheet" crossorigin href="/tour-de-playground/assets/index-DbtCwGh2.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet" />
+    <script>
+      ;(function () {
+        var s = localStorage.getItem('tdp:theme')
+        var dark = s !== null ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
+    <script type="module" crossorigin src="/tour-de-playground/assets/index-D4yygkA3.js"></script>
+    <link rel="stylesheet" crossorigin href="/tour-de-playground/assets/index-D31rIFPB.css">
   </head>
   <body>
     <div id="root"></div>
