@@ -13,7 +13,8 @@ export default function Counter({ total, visited, onToggle }: Props) {
       onClick={onToggle}
       aria-label="Toggle playground list"
     >
-      ☰ {visited} / {total}
+      <span className={styles.icon}>≡</span>
+      <span className={styles.count}>{visited}/{total}</span>
     </button>
   )
 }

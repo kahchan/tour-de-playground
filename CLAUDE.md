@@ -4,7 +4,7 @@ Wellington playground check-off map. Riders tap a marker to check off a playgrou
 
 ## Status
 
-UI rebuild complete (Phases 1–6 done).
+UI rebuild complete (Phases 1–7 done).
 
 - **Frontend:** https://kahchan.github.io/tour-de-playground
 - **API Worker:** https://tour-de-playground-api.chan-kah.workers.dev
@@ -12,9 +12,10 @@ UI rebuild complete (Phases 1–6 done).
 ## Stack
 
 - Vite + React + TypeScript (frontend, GitHub Pages)
-- MapLibre GL + MapTiler vector tiles (`outdoor-v2` style)
+- MapLibre GL + MapTiler vector tiles (`outdoor-v2` light / `streets-v2-dark` dark)
 - Cloudflare Worker + KV (backend, `*.workers.dev`)
 - `playgrounds.json` committed to repo, generated from WCC ArcGIS feed
+- Red Hat Display variable font (Google Fonts, weight 300–900)
 
 ## Commands
 
@@ -48,8 +49,12 @@ Copy `.env.example` to `.env.local` and fill in values.
 
 - `src/hooks/useCheckIns.ts` — polls Worker every 7s when `VITE_WORKER_URL` is set; falls back to localStorage if not. Caches Worker state in localStorage for instant render on refresh. Also manages `disabledIds` and exposes `toggleDisabled`, `resetAll`.
 - `src/hooks/useName.ts` — name always in localStorage, never sent to Worker.
-- `src/components/MapView.tsx` — MapLibre map. Blue circles = unchecked, faded green + ✓ tick = checked, indigo clusters. Clicking a marker opens the popup and highlights the item in the sidebar.
-- `src/components/Sidebar.tsx` — suburb-grouped collapsible list; bottom sheet on mobile, floating right card on desktop (360px, 16px margins, overlays map). Accepts `highlight` prop (`{ id, seq }`) to expand + scroll + flash a specific item. Full-row tap toggles check (calls `onToggleCheck`). In admin mode shows disable/enable toggles and a reset button.
+- `src/hooks/useDarkMode.ts` — reads `localStorage` (`tdp:dark-mode`), falls back to `prefers-color-scheme`. Sets `data-theme` on `<html>` (applied before React hydrates via inline script in `index.html`). Dark mode switches MapTiler style to `streets-v2-dark`.
+- `src/components/Wordmark.tsx` — upper-left frosted-glass pill: app name (weight 900) + `X / 111` count + moon/sun theme toggle. z-index 26 so it stays above the mobile backdrop.
+- `src/components/Counter.tsx` — upper-right frosted-glass pill: `≡ X/111` sidebar toggle. z-index 26.
+- `src/components/MapView.tsx` — MapLibre map. Blue circles = unchecked, faded green + ✓ tick = checked, indigo clusters. Clicking a marker opens the popup and highlights the item in the sidebar. Accepts `darkMode` prop; switches map style via `map.setStyle()` and re-adds sources/layers on `style.load`.
+- `src/components/Sidebar.tsx` — suburb-grouped collapsible list; floating bottom panel on mobile (0.5rem margins all sides, 20px radius), floating right card on desktop (360px, 16px margins). All suburbs expanded by default on first load. Suburb headers are `position: sticky`. Full-row tap toggles check + `navigator.vibrate(40)`. Font 1.25rem on mobile, 1rem on desktop. In admin mode shows disable/enable toggles and a reset button.
+- `src/index.css` — CSS custom properties for all colour tokens; `[data-theme='dark']` overrides.
 - Reset UI at `/?reset=1` — passphrase POSTs to `/reset` on the Worker.
 - Admin mode at `/?admin=1` — no auth beyond the URL param. Shows disabled playgrounds with dashed border + toggle; shows "Reset everything" button (requires passphrase to confirm).
 
@@ -100,6 +105,8 @@ Copy `.env.example` to `.env.local` and fill in values.
 | ------- | ------------------------------------------------------------------------------------------------------------- |
 | v2      | Geofence: only allow check-off within 50m via browser geolocation                                             |
 | v2      | Per-rider stats (your count, your last check-off)                                                             |
+| v2      | Wake Lock API — keep screen on during a ride                                                                  |
+| v2      | Haptic feedback on map marker check-off (already on sidebar tap)                                              |
 | Later   | Offline tile caching via Service Worker (Cache API) — useful for on-ride use where connectivity is unreliable |
 | Later   | `?room=xyz` for per-group sessions                                                                            |
 | Later   | Photo upload on check-off                                                                                     |

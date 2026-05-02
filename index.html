@@ -8,6 +8,16 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>Tour de Playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet" />
+    <script>
+      ;(function () {
+        var s = localStorage.getItem('tdp:dark-mode')
+        var dark = s !== null ? s === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

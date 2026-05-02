@@ -1,15 +1,17 @@
 .badge {
   position: absolute;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom));
-  right: 1rem;
-  background: rgba(255, 255, 255, 0.92);
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  background: var(--overlay-bg);
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   padding: 0.4rem 0.65rem;
   border-radius: 8px;
   font-size: 0.8rem;
-  color: #444;
+  color: var(--overlay-text);
   z-index: 10;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--overlay-shadow);
+  font-family: inherit;
 }
 
 .changeBtn {
@@ -20,4 +22,5 @@
   cursor: pointer;
   padding: 0;
   text-decoration: underline;
+  font-family: inherit;
 }

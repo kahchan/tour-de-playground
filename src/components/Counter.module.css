@@ -1,21 +1,39 @@
 .counter {
   position: absolute;
   top: 1rem;
-  left: 1rem;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(4px);
-  padding: 0.5rem 0.75rem;
-  border-radius: 8px;
+  right: 1rem;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  padding: 0.45rem 0.7rem;
+  border-radius: 10px;
   font-size: 0.875rem;
-  font-weight: 600;
-  color: #1a1a1a;
-  z-index: 10;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  font-weight: 700;
+  color: var(--overlay-text);
+  z-index: 26;
+  box-shadow: var(--overlay-shadow);
   border: none;
   cursor: pointer;
   min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: opacity 0.15s;
 }
 
 .counter:active {
-  background: rgba(240, 240, 240, 0.95);
+  opacity: 0.7;
+}
+
+.icon {
+  font-size: 1.15rem;
+  line-height: 1;
+  font-weight: 400;
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
 }

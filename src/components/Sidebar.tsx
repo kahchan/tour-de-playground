@@ -58,6 +58,13 @@ export default function Sidebar({
       }))
   }, [playgrounds])
 
+  // Expand all suburbs when data first loads
+  useEffect(() => {
+    if (suburbGroups.length > 0 && expandedSuburbs.size === 0) {
+      setExpandedSuburbs(new Set(suburbGroups.map((g) => g.suburb)))
+    }
+  }, [suburbGroups]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!highlight) return
     const { id } = highlight
@@ -82,6 +89,12 @@ export default function Sidebar({
       else next.add(suburb)
       return next
     })
+  }
+
+  function handleItemTap(id: string, disabled: boolean) {
+    if (disabled) return
+    navigator.vibrate?.(40)
+    onToggleCheck(id)
   }
 
   async function handleResetConfirm() {
@@ -110,7 +123,7 @@ export default function Sidebar({
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
         <div className={styles.header}>
           <div className={styles.headerText}>
-            <span className={styles.title}>Tour de Playground</span>
+            <span className={styles.title}>Playgrounds</span>
             <span className={styles.progress}>
               {checkedIds.size} / {playgrounds.length} done
             </span>
@@ -222,7 +235,7 @@ export default function Sidebar({
                           >
                             <button
                               className={styles.itemMain}
-                              onClick={() => !disabled && onToggleCheck(p.id)}
+                              onClick={() => handleItemTap(p.id, disabled && !isAdmin)}
                               disabled={disabled && !isAdmin}
                             >
                               <span

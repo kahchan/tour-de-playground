@@ -6,13 +6,13 @@
 
 .panel {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  border-radius: 16px 16px 0 0;
-  padding: 1.5rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
+  bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  left: 0.5rem;
+  right: 0.5rem;
+  background: var(--popup-bg);
+  border-radius: 16px;
+  padding: 1.5rem 1.5rem 1.75rem;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.3);
 }
 
 .closeBtn {
@@ -23,62 +23,67 @@
   border: none;
   font-size: 1.5rem;
   line-height: 1;
-  color: #999;
+  color: var(--popup-text-dim);
   cursor: pointer;
   padding: 0.25rem 0.5rem;
 }
 
 .name {
   font-size: 1.125rem;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-weight: 700;
+  color: var(--popup-text);
   margin-bottom: 1rem;
   padding-right: 2rem;
+  font-family: inherit;
 }
 
 .checked {
   font-size: 1rem;
-  color: #16a34a;
+  color: var(--popup-checked);
   font-weight: 500;
+  font-family: inherit;
 }
 
 .checkAs {
   font-size: 0.875rem;
-  color: #666;
+  color: var(--popup-text-dim);
   margin-bottom: 0.75rem;
+  font-family: inherit;
 }
 
 .checkBtn {
   width: 100%;
   padding: 0.875rem;
-  background: #3b82f6;
+  background: var(--popup-check-btn);
   color: #fff;
   border: none;
   border-radius: 10px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
+  font-family: inherit;
 }
 
 .checkBtn:active {
-  background: #2563eb;
+  background: var(--popup-check-btn-active);
 }
 
 .undoBtn {
   width: 100%;
   padding: 0.875rem;
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--popup-undo-btn);
+  color: var(--popup-undo-text);
   border: none;
   border-radius: 10px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
   margin-top: 0.5rem;
+  font-family: inherit;
 }
 
 .undoBtn:active {
-  background: #e5e7eb;
+  background: var(--popup-undo-btn-active);
 }

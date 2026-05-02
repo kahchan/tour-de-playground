@@ -5,23 +5,24 @@
   z-index: 24;
 }
 
-/* Mobile: bottom sheet */
+/* Mobile: floating bottom sheet */
 .sidebar {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 70vh;
-  background: #151655;
-  color: #ffffff;
-  border-radius: 25px 25px 0 0;
-  box-shadow: rgba(84, 84, 84, 0.23) 0px 0px 20px 0px;
+  bottom: calc(0.5rem + env(safe-area-inset-bottom));
+  left: 0.5rem;
+  right: 0.5rem;
+  height: 65vh;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-radius: 20px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.35);
   z-index: 25;
   display: flex;
   flex-direction: column;
-  transform: translateY(100%);
+  transform: translateY(calc(100% + 1.5rem));
   transition: transform 0.28s ease;
-  padding-bottom: env(safe-area-inset-bottom);
+  font-size: 1.25rem;
+  font-family: inherit;
 }
 
 .sidebar.open {
@@ -41,8 +42,9 @@
     left: auto;
     width: 360px;
     height: auto;
-    border-radius: 25px;
+    border-radius: 20px;
     transform: translateX(calc(360px + 32px));
+    font-size: 1rem;
   }
 
   .sidebar.open {
@@ -55,8 +57,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 16px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.9em 0.85em 0.7em;
+  border-bottom: 1px solid var(--sidebar-border);
   flex-shrink: 0;
 }
 
@@ -67,59 +69,62 @@
 }
 
 .title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #ffffff;
+  font-size: 0.875em;
+  font-weight: 700;
+  color: var(--sidebar-text);
   letter-spacing: -0.01em;
 }
 
 .progress {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.7em;
+  color: var(--sidebar-text-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 .headerActions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 0.35em;
 }
 
 .filterToggle {
   background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--sidebar-text-dim);
   border: none;
   border-radius: 25px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 0.28em 0.65em;
+  font-size: 0.7em;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
+  font-family: inherit;
 }
 
 .filterToggle:hover {
   background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+  color: var(--sidebar-text);
 }
 
 .filterToggleActive {
-  background: #6c1ec5;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--sidebar-text);
 }
 
 .filterToggleActive:hover {
-  background: #7d25d8;
+  background: var(--accent-hover);
 }
 
 .resetBtn {
   background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  color: var(--sidebar-text);
   border: none;
   border-radius: 25px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 0.28em 0.65em;
+  font-size: 0.7em;
+  font-weight: 700;
   cursor: pointer;
   transition: background 0.15s;
+  font-family: inherit;
 }
 
 .resetBtn:hover {
@@ -130,48 +135,50 @@
   background: rgba(255, 255, 255, 0.1);
   border: none;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  font-size: 18px;
+  width: 1.75em;
+  height: 1.75em;
+  font-size: 1em;
   line-height: 1;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--sidebar-text-dim);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background 0.15s;
+  font-family: inherit;
 }
 
 .closeBtn:hover {
   background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
+  color: var(--sidebar-text);
 }
 
 /* Reset confirm panel */
 .resetPanel {
-  padding: 12px 16px;
+  padding: 0.65em 0.85em;
   background: rgba(255, 50, 50, 0.12);
   border-bottom: 1px solid rgba(255, 100, 100, 0.2);
   flex-shrink: 0;
 }
 
 .resetWarning {
-  font-size: 12px;
+  font-size: 0.7em;
   color: rgba(255, 180, 180, 0.9);
-  margin: 0 0 8px;
+  margin: 0 0 0.5em;
 }
 
 .resetInput {
   width: 100%;
   box-sizing: border-box;
-  padding: 7px 10px;
+  padding: 0.38em 0.55em;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 100, 100, 0.4);
   border-radius: 10px;
-  font-size: 13px;
-  color: #ffffff;
-  margin-bottom: 8px;
+  font-size: 0.75em;
+  color: var(--sidebar-text);
+  margin-bottom: 0.5em;
   outline: none;
+  font-family: inherit;
 }
 
 .resetInput::placeholder {
@@ -183,26 +190,27 @@
 }
 
 .resetError {
-  font-size: 12px;
+  font-size: 0.7em;
   color: #ff8080;
-  margin: 0 0 8px;
+  margin: 0 0 0.5em;
 }
 
 .resetActions {
   display: flex;
-  gap: 6px;
+  gap: 0.35em;
 }
 
 .resetConfirmBtn {
   flex: 1;
   background: rgba(255, 80, 80, 0.6);
-  color: #ffffff;
+  color: var(--sidebar-text);
   border: none;
   border-radius: 25px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
+  padding: 0.35em 0.65em;
+  font-size: 0.7em;
+  font-weight: 700;
   cursor: pointer;
+  font-family: inherit;
 }
 
 .resetConfirmBtn:disabled {
@@ -212,12 +220,13 @@
 
 .resetCancelBtn {
   background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--sidebar-text-dim);
   border: none;
   border-radius: 25px;
-  padding: 6px 12px;
-  font-size: 12px;
+  padding: 0.35em 0.65em;
+  font-size: 0.7em;
   cursor: pointer;
+  font-family: inherit;
 }
 
 /* Flash highlight for map→sidebar sync */
@@ -237,11 +246,11 @@
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 6px 0 12px;
+  padding: 4px 0 8px;
 }
 
 .body::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 
 .body::-webkit-scrollbar-track {
@@ -255,7 +264,7 @@
 
 /* Suburb sections */
 .suburbSection {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--sidebar-section-border);
 }
 
 .suburbSection:last-child {
@@ -263,29 +272,34 @@
 }
 
 .suburbHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: none;
+  gap: 0.45em;
+  padding: 0.55em 0.85em;
+  background: var(--sidebar-suburb-bg);
   border: none;
   cursor: pointer;
   text-align: left;
-  color: #ffffff;
+  color: var(--sidebar-text);
   transition: background 0.12s;
+  font-family: inherit;
+  font-size: 1em;
 }
 
 .suburbHeader:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--sidebar-suburb-bg) 85%, white);
 }
 
 .chevron {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 1em;
+  color: var(--sidebar-text-faint);
   transition: transform 0.18s ease;
   display: inline-block;
-  width: 14px;
+  width: 0.75em;
   flex-shrink: 0;
 }
 
@@ -295,14 +309,15 @@
 
 .suburbName {
   flex: 1;
-  font-size: 13px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.8em;
+  font-weight: 700;
+  color: var(--sidebar-text);
+  opacity: 0.85;
 }
 
 .suburbCount {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.7em;
+  color: var(--sidebar-text-faint);
   font-variant-numeric: tabular-nums;
 }
 
@@ -316,25 +331,27 @@
 .item {
   display: flex;
   align-items: center;
-  min-height: 40px;
+  min-height: 3em;
 }
 
 .itemMain {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 0.55em;
   flex: 1;
-  padding: 8px 16px 8px 36px;
+  padding: 0.45em 0.85em 0.45em 2em;
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
-  min-height: 40px;
-  color: #ffffff;
+  min-height: 3em;
+  color: var(--sidebar-text);
+  font-family: inherit;
+  font-size: 1em;
 }
 
 .itemMain:hover {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--sidebar-item-hover);
 }
 
 .itemChecked .itemMain {
@@ -350,44 +367,46 @@
 .itemDisabled .itemMain {
   opacity: 0.35;
   cursor: default;
-  padding-left: 10px;
+  padding-left: 0.55em;
 }
 
 .dot {
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
+  width: 1.1em;
+  height: 1.1em;
   border-radius: 50%;
-  border: 1.5px solid rgba(100, 140, 255, 0.7);
+  border: 1.5px solid var(--dot-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  color: #ffffff;
+  font-size: 0.6em;
+  color: var(--sidebar-text);
 }
 
 .dotChecked {
-  background: #22c55e;
-  border-color: #22c55e;
+  background: var(--green);
+  border-color: var(--green);
 }
 
 .itemName {
   flex: 1;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.8em;
+  font-weight: 500;
+  color: var(--sidebar-text);
+  opacity: 0.9;
   line-height: 1.3;
 }
 
 .itemBy {
-  font-size: 11px;
-  color: rgba(100, 220, 140, 0.8);
+  font-size: 0.65em;
+  color: var(--item-by-color);
   flex-shrink: 0;
 }
 
 .disabledBadge {
-  font-size: 10px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.6em;
+  font-weight: 700;
+  color: var(--sidebar-text-faint);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   flex-shrink: 0;
@@ -399,16 +418,17 @@
   flex-shrink: 0;
   border: none;
   border-radius: 25px;
-  padding: 3px 8px;
-  font-size: 10px;
-  font-weight: 600;
+  padding: 0.18em 0.45em;
+  font-size: 0.6em;
+  font-weight: 700;
   cursor: pointer;
-  margin-right: 8px;
+  margin-right: 0.45em;
+  font-family: inherit;
 }
 
 .disableBtn {
   background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--sidebar-text-dim);
 }
 
 .disableBtn:hover {

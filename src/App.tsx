@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Playground } from './types'
 import { useCheckIns } from './hooks/useCheckIns'
 import { useName } from './hooks/useName'
+import { useDarkMode } from './hooks/useDarkMode'
 import MapView from './components/MapView'
 import Counter from './components/Counter'
+import Wordmark from './components/Wordmark'
 import NameBadge from './components/NameBadge'
 import MarkerPopup from './components/MarkerPopup'
 import NamePrompt from './components/NamePrompt'
@@ -20,6 +22,7 @@ export default function App() {
   const { checkIns, addCheckIn, removeCheckIn, disabledIds, toggleDisabled, resetAll, error } =
     useCheckIns()
   const { name, setName } = useName()
+  const { dark, toggle: toggleDark } = useDarkMode()
   const [selected, setSelected] = useState<Playground | null>(null)
   const [showNamePrompt, setShowNamePrompt] = useState(false)
   const [pendingId, setPendingId] = useState<string | null>(null)
@@ -38,7 +41,6 @@ export default function App() {
       .catch((err) => console.error('Failed to load playgrounds:', err))
   }, [])
 
-  // In non-admin mode, hide disabled playgrounds entirely
   const visiblePlaygrounds = useMemo(
     () =>
       isAdmin ? playgrounds : playgrounds.filter((p) => !disabledIds.has(p.id)),
@@ -111,6 +113,18 @@ export default function App() {
         playgrounds={visiblePlaygrounds}
         checkedIds={checkedIds}
         onMarkerClick={handleMarkerClick}
+        darkMode={dark}
+      />
+      <Wordmark
+        total={visiblePlaygrounds.length}
+        visited={checkedIds.size}
+        dark={dark}
+        onToggleDark={toggleDark}
+      />
+      <Counter
+        total={visiblePlaygrounds.length}
+        visited={checkedIds.size}
+        onToggle={() => setSidebarOpen((o) => !o)}
       />
       <Sidebar
         playgrounds={visiblePlaygrounds}
@@ -124,11 +138,6 @@ export default function App() {
         onToggleDisabled={toggleDisabled}
         onAdminReset={resetAll}
         highlight={sidebarHighlight}
-      />
-      <Counter
-        total={visiblePlaygrounds.length}
-        visited={checkedIds.size}
-        onToggle={() => setSidebarOpen((o) => !o)}
       />
       <NameBadge name={name} onChangeName={() => setShowNamePrompt(true)} />
       {error && <div className={styles.errorBanner}>{error}</div>}
