@@ -9,73 +9,36 @@
 :root {
   font-family: 'Red Hat Display', system-ui, -apple-system, sans-serif;
 
-  /* Sidebar */
-  --sidebar-bg: #151655;
-  --sidebar-text: #ffffff;
-  --sidebar-text-dim: rgba(255, 255, 255, 0.5);
-  --sidebar-text-faint: rgba(255, 255, 255, 0.4);
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-section-border: rgba(255, 255, 255, 0.06);
-  --sidebar-hover: rgba(255, 255, 255, 0.05);
-  --sidebar-item-hover: rgba(255, 255, 255, 0.04);
-  --sidebar-suburb-bg: #151655;
-
-  /* Map overlays (wordmark, toggle, name badge) */
-  --overlay-bg: rgba(255, 255, 255, 0.92);
-  --overlay-text: #1a1a1a;
-  --overlay-text-dim: #555;
-  --overlay-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-
-  /* Popup */
-  --popup-bg: #ffffff;
-  --popup-text: #1a1a1a;
-  --popup-text-dim: #666;
-  --popup-checked: #16a34a;
-  --popup-check-btn: #3b82f6;
-  --popup-check-btn-active: #2563eb;
-  --popup-undo-btn: #f3f4f6;
-  --popup-undo-text: #6b7280;
-  --popup-undo-btn-active: #e5e7eb;
-
-  /* Accents */
-  --accent: #6c1ec5;
-  --accent-hover: #7d25d8;
-  --green: #22c55e;
-  --dot-border: rgba(100, 140, 255, 0.7);
-  --item-by-color: rgba(100, 220, 140, 0.8);
+  /* 80s dark palette (default) */
+  --color-bg: #0a0a0a;
+  --color-surface: #111111;
+  --color-surface-2: #1a1a1a;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-text: #ffffff;
+  --color-muted: rgba(255, 255, 255, 0.45);
+  --color-teal: #00c8d7;
+  --color-teal-dim: rgba(0, 200, 215, 0.15);
+  --color-teal-border: rgba(0, 200, 215, 0.4);
+  --color-pink: #9b20d0;
+  --color-pink-dim: rgba(155, 32, 208, 0.15);
+  --color-pink-border: rgba(155, 32, 208, 0.4);
+  --color-error: #9b20d0;
 }
 
-[data-theme='dark'] {
-  /* Sidebar */
-  --sidebar-bg: #0c0c1e;
-  --sidebar-text: #e8e8f8;
-  --sidebar-text-dim: rgba(232, 232, 248, 0.5);
-  --sidebar-text-faint: rgba(232, 232, 248, 0.35);
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-section-border: rgba(255, 255, 255, 0.05);
-  --sidebar-hover: rgba(255, 255, 255, 0.04);
-  --sidebar-item-hover: rgba(255, 255, 255, 0.03);
-  --sidebar-suburb-bg: #0c0c1e;
-
-  /* Map overlays */
-  --overlay-bg: rgba(12, 12, 30, 0.9);
-  --overlay-text: #e8e8f8;
-  --overlay-text-dim: rgba(232, 232, 248, 0.55);
-  --overlay-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
-
-  /* Popup */
-  --popup-bg: #141428;
-  --popup-text: #e8e8f8;
-  --popup-text-dim: rgba(232, 232, 248, 0.55);
-  --popup-checked: #4ade80;
-  --popup-check-btn: #4f6ef7;
-  --popup-check-btn-active: #3d5ae8;
-  --popup-undo-btn: rgba(255, 255, 255, 0.08);
-  --popup-undo-text: rgba(232, 232, 248, 0.6);
-  --popup-undo-btn-active: rgba(255, 255, 255, 0.13);
-
-  /* Accents */
-  --item-by-color: rgba(74, 222, 128, 0.85);
+[data-theme='light'] {
+  --color-bg: #f2f2f2;
+  --color-surface: #ffffff;
+  --color-surface-2: #e8e8e8;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-text: #0a0a0a;
+  --color-muted: rgba(0, 0, 0, 0.45);
+  --color-teal: #00818c;
+  --color-teal-dim: rgba(0, 129, 140, 0.12);
+  --color-teal-border: rgba(0, 129, 140, 0.4);
+  --color-pink: #6510a0;
+  --color-pink-dim: rgba(101, 16, 160, 0.10);
+  --color-pink-border: rgba(101, 16, 160, 0.4);
+  --color-error: #6510a0;
 }
 
 html,

@@ -9,7 +9,7 @@
   bottom: 5rem;
   left: 50%;
   transform: translateX(-50%);
-  background: #ef4444;
+  background: var(--color-error);
   color: #fff;
   padding: 0.5rem 1rem;
   border-radius: 8px;

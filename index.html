@@ -13,8 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet" />
     <script>
       ;(function () {
-        var s = localStorage.getItem('tdp:dark-mode')
-        var dark = s !== null ? s === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches
+        var s = localStorage.getItem('tdp:theme')
+        var dark = s !== null ? s === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches
         document.documentElement.dataset.theme = dark ? 'dark' : 'light'
       })()
     </script>

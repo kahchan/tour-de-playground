@@ -3,8 +3,8 @@ import type { Playground } from './types'
 import { useCheckIns } from './hooks/useCheckIns'
 import { useName } from './hooks/useName'
 import { useDarkMode } from './hooks/useDarkMode'
+import { useRoute } from './hooks/useRoute'
 import MapView from './components/MapView'
-import Counter from './components/Counter'
 import Wordmark from './components/Wordmark'
 import NameBadge from './components/NameBadge'
 import MarkerPopup from './components/MarkerPopup'
@@ -52,16 +52,13 @@ export default function App() {
     [checkIns],
   )
 
-  function handleToggleCheck(id: string) {
-    if (checkedIds.has(id)) {
-      removeCheckIn(id)
-    } else if (!name) {
-      setPendingId(id)
-      setShowNamePrompt(true)
-    } else {
-      addCheckIn(id, name)
-    }
-  }
+  const uncheckedPlaygrounds = useMemo(
+    () => visiblePlaygrounds.filter((p) => !checkedIds.has(p.id)),
+    [visiblePlaygrounds, checkedIds],
+  )
+
+  const { mode: routeMode, cycle: cycleRoute, fetchState: routeFetchState, geoJSON: routeGeoJSON, orderedIds: routeOrderedIds } =
+    useRoute(uncheckedPlaygrounds)
 
   function handlePopupCheckOff() {
     if (!selected) return
@@ -114,17 +111,19 @@ export default function App() {
         checkedIds={checkedIds}
         onMarkerClick={handleMarkerClick}
         darkMode={dark}
+        routeGeoJSON={routeGeoJSON}
+        routeOrder={routeOrderedIds}
+        selectedId={selected?.id ?? null}
       />
       <Wordmark
         total={visiblePlaygrounds.length}
         visited={checkedIds.size}
         dark={dark}
         onToggleDark={toggleDark}
-      />
-      <Counter
-        total={visiblePlaygrounds.length}
-        visited={checkedIds.size}
-        onToggle={() => setSidebarOpen((o) => !o)}
+        onToggleSidebar={() => setSidebarOpen((o) => !o)}
+        routeMode={routeMode}
+        routeFetchState={routeFetchState}
+        onCycleRoute={import.meta.env.VITE_ORS_KEY ? cycleRoute : undefined}
       />
       <Sidebar
         playgrounds={visiblePlaygrounds}
@@ -132,12 +131,12 @@ export default function App() {
         checkedIds={checkedIds}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        onToggleCheck={handleToggleCheck}
         isAdmin={isAdmin}
         disabledIds={disabledIds}
         onToggleDisabled={toggleDisabled}
         onAdminReset={resetAll}
         highlight={sidebarHighlight}
+        routeOrder={routeOrderedIds.length > 0 ? routeOrderedIds : undefined}
       />
       <NameBadge name={name} onChangeName={() => setShowNamePrompt(true)} />
       {error && <div className={styles.errorBanner}>{error}</div>}

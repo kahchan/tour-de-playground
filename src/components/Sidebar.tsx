@@ -8,12 +8,12 @@ interface Props {
   checkedIds: Set<string>
   isOpen: boolean
   onClose: () => void
-  onToggleCheck: (id: string) => void
   isAdmin: boolean
   disabledIds: Set<string>
   onToggleDisabled: (id: string, on: boolean) => void
   onAdminReset: (passphrase: string) => Promise<void>
   highlight?: { id: string; seq: number } | null
+  routeOrder?: string[]
 }
 
 interface SuburbGroup {
@@ -21,27 +21,36 @@ interface SuburbGroup {
   playgrounds: Playground[]
 }
 
+type Filter = 'all' | 'undone' | 'route'
+
 export default function Sidebar({
   playgrounds,
   checkIns,
   checkedIds,
   isOpen,
   onClose,
-  onToggleCheck,
   isAdmin,
   disabledIds,
   onToggleDisabled,
   onAdminReset,
   highlight,
+  routeOrder,
 }: Props) {
   const [expandedSuburbs, setExpandedSuburbs] = useState<Set<string>>(new Set())
-  const [showUndoneOnly, setShowUndoneOnly] = useState(false)
+  const [filter, setFilter] = useState<Filter>('all')
   const [flashId, setFlashId] = useState<string | null>(null)
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map())
   const [resetConfirming, setResetConfirming] = useState(false)
   const [resetPassphrase, setResetPassphrase] = useState('')
   const [resetPending, setResetPending] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
+
+  // If routeOrder disappears, exit route filter
+  useEffect(() => {
+    if (filter === 'route' && (!routeOrder || routeOrder.length === 0)) {
+      setFilter('all')
+    }
+  }, [routeOrder, filter])
 
   const suburbGroups = useMemo((): SuburbGroup[] => {
     const map = new Map<string, Playground[]>()
@@ -58,7 +67,16 @@ export default function Sidebar({
       }))
   }, [playgrounds])
 
-  // Expand all suburbs when data first loads
+  // Route view: unchecked playgrounds in TSP order with position numbers
+  const routeItems = useMemo(() => {
+    if (!routeOrder) return []
+    const pgMap = new Map(playgrounds.map((p) => [p.id, p]))
+    return routeOrder
+      .filter((id) => !checkedIds.has(id))
+      .map((id, i) => ({ pos: i + 1, playground: pgMap.get(id) }))
+      .filter((x): x is { pos: number; playground: Playground } => x.playground !== undefined)
+  }, [routeOrder, playgrounds, checkedIds])
+
   useEffect(() => {
     if (suburbGroups.length > 0 && expandedSuburbs.size === 0) {
       setExpandedSuburbs(new Set(suburbGroups.map((g) => g.suburb)))
@@ -68,6 +86,9 @@ export default function Sidebar({
   useEffect(() => {
     if (!highlight) return
     const { id } = highlight
+    if (filter === 'route') {
+      setFilter('all')
+    }
     const group = suburbGroups.find((g) => g.playgrounds.some((p) => p.id === id))
     if (!group) return
     setExpandedSuburbs((prev) => new Set([...prev, group.suburb]))
@@ -89,12 +110,6 @@ export default function Sidebar({
       else next.add(suburb)
       return next
     })
-  }
-
-  function handleItemTap(id: string, disabled: boolean) {
-    if (disabled) return
-    navigator.vibrate?.(40)
-    onToggleCheck(id)
   }
 
   async function handleResetConfirm() {
@@ -130,12 +145,21 @@ export default function Sidebar({
           </div>
           <div className={styles.headerActions}>
             <button
-              className={`${styles.filterToggle} ${showUndoneOnly ? styles.filterToggleActive : ''}`}
-              onClick={() => setShowUndoneOnly((o) => !o)}
-              title={showUndoneOnly ? 'Show all playgrounds' : 'Show only undone'}
+              className={`${styles.filterToggle} ${filter === 'undone' ? styles.filterToggleActive : ''}`}
+              onClick={() => setFilter((f) => (f === 'undone' ? 'all' : 'undone'))}
+              title={filter === 'undone' ? 'Show all playgrounds' : 'Show only undone'}
             >
-              {showUndoneOnly ? 'All' : 'Undone'}
+              Undone
             </button>
+            {routeOrder && routeOrder.length > 0 && (
+              <button
+                className={`${styles.filterToggle} ${filter === 'route' ? styles.filterToggleActive : ''}`}
+                onClick={() => setFilter((f) => (f === 'route' ? 'all' : 'route'))}
+                title={filter === 'route' ? 'Show all playgrounds' : 'Show in route order'}
+              >
+                Route
+              </button>
+            )}
             {isAdmin && !resetConfirming && (
               <button
                 className={styles.resetBtn}
@@ -186,99 +210,117 @@ export default function Sidebar({
         )}
 
         <div className={styles.body}>
-          {suburbGroups.map(({ suburb, playgrounds: pgs }) => {
-            const checkedCount = pgs.filter((p) => checkedIds.has(p.id)).length
-            const visiblePgs = showUndoneOnly
-              ? pgs.filter((p) => !checkedIds.has(p.id))
-              : pgs
-            if (visiblePgs.length === 0) return null
-            const isExpanded = expandedSuburbs.has(suburb)
-            return (
-              <div key={suburb} className={styles.suburbSection}>
-                <button
-                  className={styles.suburbHeader}
-                  onClick={() => toggleSuburb(suburb)}
-                >
-                  <span
-                    className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ''}`}
+          {filter === 'route' ? (
+            <ul className={styles.routeList}>
+              {routeItems.map(({ pos, playground: p }) => {
+                const checked = checkedIds.has(p.id)
+                return (
+                  <li key={p.id}>
+                    <div className={`${styles.routeItem} ${checked ? styles.itemChecked : ''}`}>
+                      <span className={styles.routePos}>{pos}</span>
+                      <span className={styles.routeItemText}>
+                        <span className={styles.itemName}>{p.name}</span>
+                        {p.suburb && <span className={styles.itemSuburb}>{p.suburb}</span>}
+                      </span>
+                      <span className={`${styles.dot} ${checked ? styles.dotChecked : ''}`}>
+                        {checked ? '✓' : ''}
+                      </span>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            suburbGroups.map(({ suburb, playgrounds: pgs }) => {
+              const checkedCount = pgs.filter((p) => checkedIds.has(p.id)).length
+              const visiblePgs = filter === 'undone'
+                ? pgs.filter((p) => !checkedIds.has(p.id))
+                : pgs
+              if (visiblePgs.length === 0) return null
+              const isExpanded = expandedSuburbs.has(suburb)
+              return (
+                <div key={suburb} className={styles.suburbSection}>
+                  <button
+                    className={styles.suburbHeader}
+                    onClick={() => toggleSuburb(suburb)}
                   >
-                    ›
-                  </span>
-                  <span className={styles.suburbName}>{suburb}</span>
-                  <span className={styles.suburbCount}>
-                    {checkedCount}/{pgs.length}
-                  </span>
-                </button>
-                {isExpanded && (
-                  <ul className={styles.suburbList}>
-                    {visiblePgs.map((p) => {
-                      const checked = checkedIds.has(p.id)
-                      const disabled = disabledIds.has(p.id)
-                      const checkIn = checkIns.find((c) => c.id === p.id)
-                      return (
-                        <li
-                          key={p.id}
-                          ref={(el) => {
-                            if (el) itemRefs.current.set(p.id, el)
-                            else itemRefs.current.delete(p.id)
-                          }}
-                        >
-                          <div
-                            className={[
-                              styles.item,
-                              checked ? styles.itemChecked : '',
-                              isAdmin && disabled ? styles.itemDisabled : '',
-                              flashId === p.id ? styles.itemFlash : '',
-                            ]
-                              .filter(Boolean)
-                              .join(' ')}
+                    <span
+                      className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ''}`}
+                    >
+                      ›
+                    </span>
+                    <span className={styles.suburbName}>{suburb}</span>
+                    <span className={styles.suburbCount}>
+                      {checkedCount}/{pgs.length}
+                    </span>
+                  </button>
+                  {isExpanded && (
+                    <ul className={styles.suburbList}>
+                      {visiblePgs.map((p) => {
+                        const checked = checkedIds.has(p.id)
+                        const disabled = disabledIds.has(p.id)
+                        const checkIn = checkIns.find((c) => c.id === p.id)
+                        return (
+                          <li
+                            key={p.id}
+                            ref={(el) => {
+                              if (el) itemRefs.current.set(p.id, el)
+                              else itemRefs.current.delete(p.id)
+                            }}
                           >
-                            <button
-                              className={styles.itemMain}
-                              onClick={() => handleItemTap(p.id, disabled && !isAdmin)}
-                              disabled={disabled && !isAdmin}
+                            <div
+                              className={[
+                                styles.item,
+                                checked ? styles.itemChecked : '',
+                                isAdmin && disabled ? styles.itemDisabled : '',
+                                flashId === p.id ? styles.itemFlash : '',
+                              ]
+                                .filter(Boolean)
+                                .join(' ')}
                             >
-                              <span
-                                className={`${styles.dot} ${checked ? styles.dotChecked : ''}`}
-                              >
-                                {checked ? '✓' : ''}
-                              </span>
-                              <span className={styles.itemName}>{p.name}</span>
-                              {isAdmin && disabled && (
-                                <span className={styles.disabledBadge}>
-                                  disabled
+                              <div className={styles.itemMain}>
+                                <span
+                                  className={`${styles.dot} ${checked ? styles.dotChecked : ''}`}
+                                >
+                                  {checked ? '✓' : ''}
                                 </span>
+                                <span className={styles.itemName}>{p.name}</span>
+                                {isAdmin && disabled && (
+                                  <span className={styles.disabledBadge}>
+                                    disabled
+                                  </span>
+                                )}
+                                {checkIn && !disabled && (
+                                  <span className={styles.itemBy}>
+                                    {checkIn.name}
+                                  </span>
+                                )}
+                              </div>
+                              {isAdmin && (
+                                <button
+                                  className={
+                                    disabled ? styles.enableBtn : styles.disableBtn
+                                  }
+                                  onClick={() => onToggleDisabled(p.id, !disabled)}
+                                  title={
+                                    disabled
+                                      ? 'Enable this playground'
+                                      : 'Disable this playground'
+                                  }
+                                >
+                                  {disabled ? 'Enable' : 'Disable'}
+                                </button>
                               )}
-                              {checkIn && !disabled && (
-                                <span className={styles.itemBy}>
-                                  {checkIn.name}
-                                </span>
-                              )}
-                            </button>
-                            {isAdmin && (
-                              <button
-                                className={
-                                  disabled ? styles.enableBtn : styles.disableBtn
-                                }
-                                onClick={() => onToggleDisabled(p.id, !disabled)}
-                                title={
-                                  disabled
-                                    ? 'Enable this playground'
-                                    : 'Disable this playground'
-                                }
-                              >
-                                {disabled ? 'Enable' : 'Disable'}
-                              </button>
-                            )}
-                          </div>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                )}
-              </div>
-            )
-          })}
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )
+            })
+          )}
         </div>
       </aside>
     </>

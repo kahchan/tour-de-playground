@@ -2,22 +2,22 @@
   position: absolute;
   bottom: calc(1rem + env(safe-area-inset-bottom));
   left: 1rem;
-  background: var(--overlay-bg);
+  background: var(--color-surface);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   padding: 0.4rem 0.65rem;
   border-radius: 8px;
   font-size: 0.8rem;
-  color: var(--overlay-text);
+  color: var(--color-text);
   z-index: 10;
-  box-shadow: var(--overlay-shadow);
+  border: 1px solid var(--color-teal-border);
   font-family: inherit;
 }
 
 .changeBtn {
   background: none;
   border: none;
-  color: #3b82f6;
+  color: var(--color-teal);
   font-size: 0.8rem;
   cursor: pointer;
   padding: 0;

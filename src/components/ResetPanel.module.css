@@ -3,7 +3,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #fff;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
   padding: 2rem;
   width: calc(100% - 3rem);
@@ -15,35 +16,39 @@
 .title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--color-text);
   margin-bottom: 1.25rem;
 }
 
 .input {
   width: 100%;
   padding: 0.75rem;
-  border: 1.5px solid #ddd;
+  background: var(--color-surface-2);
+  border: 1.5px solid var(--color-border);
   border-radius: 8px;
   font-size: 1rem;
+  color: var(--color-text);
   margin-bottom: 0.75rem;
   box-sizing: border-box;
+  font-family: inherit;
 }
 
 .input:focus {
   outline: none;
-  border-color: #ef4444;
+  border-color: var(--color-pink);
 }
 
 .btn {
   width: 100%;
   padding: 0.875rem;
-  background: #ef4444;
+  background: var(--color-pink);
   color: #fff;
   border: none;
   border-radius: 10px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+  font-family: inherit;
 }
 
 .btn:disabled {
@@ -52,12 +57,12 @@
 }
 
 .success {
-  color: #16a34a;
+  color: var(--color-teal);
   font-weight: 500;
 }
 
 .error {
   margin-top: 0.75rem;
   font-size: 0.875rem;
-  color: #ef4444;
+  color: var(--color-error);
 }
