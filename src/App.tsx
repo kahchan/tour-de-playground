@@ -108,6 +108,21 @@ export default function App() {
     }))
   }
 
+  function handleSidebarCheckOff(id: string) {
+    if (!name) {
+      setPendingId(id)
+      setShowNamePrompt(true)
+    } else {
+      addCheckIn(id, name)
+      setSelected(null)
+    }
+  }
+
+  function handleSidebarUndo(id: string) {
+    removeCheckIn(id)
+    setSelected(null)
+  }
+
   function handleTogglePinEnd(id: string) {
     setPinnedEndId((prev) => (prev === id ? null : id))
   }
@@ -153,6 +168,8 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
         onSelectPlayground={handleSidebarSelect}
         selectedId={selected?.id ?? null}
+        onCheckOff={handleSidebarCheckOff}
+        onUndo={handleSidebarUndo}
         isAdmin={isAdmin}
         disabledIds={disabledIds}
         onToggleDisabled={toggleDisabled}

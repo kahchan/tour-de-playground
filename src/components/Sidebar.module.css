@@ -415,6 +415,35 @@
   flex-shrink: 0;
 }
 
+/* Inline done/undo buttons shown on selected row */
+.inlineDoneBtn {
+  flex-shrink: 0;
+  background: var(--color-teal);
+  color: var(--color-bg);
+  border: none;
+  border-radius: 25px;
+  padding: 0.22em 0.6em;
+  font-size: 0.7em;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.inlineUndoBtn {
+  flex-shrink: 0;
+  background: var(--color-surface-2);
+  color: var(--color-muted);
+  border: none;
+  border-radius: 25px;
+  padding: 0.22em 0.6em;
+  font-size: 0.7em;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
 /* Pin-as-end button on route items */
 .pinEndBtn {
   flex-shrink: 0;

@@ -10,6 +10,8 @@ interface Props {
   onClose: () => void
   onSelectPlayground: (p: Playground) => void
   selectedId: string | null
+  onCheckOff: (id: string) => void
+  onUndo: (id: string) => void
   isAdmin: boolean
   disabledIds: Set<string>
   onToggleDisabled: (id: string, on: boolean) => void
@@ -35,6 +37,8 @@ export default function Sidebar({
   onClose,
   onSelectPlayground,
   selectedId,
+  onCheckOff,
+  onUndo,
   isAdmin,
   disabledIds,
   onToggleDisabled,
@@ -233,6 +237,14 @@ export default function Sidebar({
                         <span className={styles.itemName}>{p.name}</span>
                         {p.suburb && <span className={styles.itemSuburb}>{p.suburb}</span>}
                       </span>
+                      {selectedId === p.id && (
+                        <button
+                          className={styles.inlineDoneBtn}
+                          onClick={(e) => { e.stopPropagation(); onCheckOff(p.id) }}
+                        >
+                          ✓ Done
+                        </button>
+                      )}
                       <button
                         className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
                         onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
@@ -315,6 +327,23 @@ export default function Sidebar({
                                   </span>
                                 )}
                               </div>
+                              {selectedId === p.id && (
+                                checked ? (
+                                  <button
+                                    className={styles.inlineUndoBtn}
+                                    onClick={(e) => { e.stopPropagation(); onUndo(p.id) }}
+                                  >
+                                    Undo
+                                  </button>
+                                ) : (
+                                  <button
+                                    className={styles.inlineDoneBtn}
+                                    onClick={(e) => { e.stopPropagation(); onCheckOff(p.id) }}
+                                  >
+                                    ✓ Done
+                                  </button>
+                                )
+                              )}
                               {routeOrder && !checked && (
                                 <button
                                   className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
