@@ -42,9 +42,8 @@ async function fetchChunk(
   return legs
 }
 
-export function useRoute(uncheckedPlaygrounds: Playground[]) {
+export function useRoute(uncheckedPlaygrounds: Playground[], pinnedEndId: string | null) {
   const [mode, setMode] = useState<RouteMode>('off')
-  const [endMode, setEndMode] = useState<RouteMode>('off')
   const [fetchState, setFetchState] = useState<FetchState>('idle')
   const [geoJSON, setGeoJSON] = useState<FeatureCollection<LineString> | null>(null)
   const [orderedIds, setOrderedIds] = useState<string[]>([])
@@ -55,15 +54,6 @@ export function useRoute(uncheckedPlaygrounds: Playground[]) {
   const cycle = useCallback(() => {
     setMode((m) => MODE_CYCLE[(MODE_CYCLE.indexOf(m) + 1) % MODE_CYCLE.length])
   }, [])
-
-  const cycleEnd = useCallback(() => {
-    setEndMode((m) => MODE_CYCLE[(MODE_CYCLE.indexOf(m) + 1) % MODE_CYCLE.length])
-  }, [])
-
-  // Reset end mode when route turns off
-  useEffect(() => {
-    if (mode === 'off') setEndMode('off')
-  }, [mode])
 
   useEffect(() => {
     if (mode === 'off') {
@@ -82,66 +72,30 @@ export function useRoute(uncheckedPlaygrounds: Playground[]) {
       return
     }
 
-    // Resolve geolocation for start and/or end before computing route
-    resolvePositions(mode, endMode, (startPos, endPos) => {
-      if (mode === 'location' && !startPos) { setMode('off'); return }
-      if (endMode === 'location' && !endPos) { setEndMode('off'); return }
-      runRoute(startPos, endPos, orsKey)
-    })
-  }, [mode, endMode, uncheckedPlaygrounds])
-
-  function resolvePositions(
-    startMode: RouteMode,
-    endModeVal: RouteMode,
-    cb: (
-      startPos: { lat: number; lng: number } | undefined,
-      endPos: { lat: number; lng: number } | undefined,
-    ) => void,
-  ) {
-    const needStart = startMode === 'location'
-    const needEnd = endModeVal === 'location'
-
-    if (!needStart && !needEnd) { cb(undefined, undefined); return }
-
-    if (needStart && needEnd) {
-      navigator.geolocation?.getCurrentPosition(
-        (pos) => {
-          const p = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-          cb(p, p)
-        },
-        () => cb(undefined, undefined),
+    if (mode === 'location') {
+      if (!navigator.geolocation) { setMode('off'); return }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => runRoute({ lat: pos.coords.latitude, lng: pos.coords.longitude }, orsKey),
+        () => setMode('off'),
         { timeout: 8000 },
       )
       return
     }
 
-    navigator.geolocation?.getCurrentPosition(
-      (pos) => {
-        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude }
-        cb(needStart ? p : undefined, needEnd ? p : undefined)
-      },
-      () => cb(undefined, undefined),
-      { timeout: 8000 },
-    )
-  }
+    runRoute(undefined, orsKey)
+  }, [mode, pinnedEndId, uncheckedPlaygrounds]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function runRoute(
-    startPos: { lat: number; lng: number } | undefined,
-    endPos: { lat: number; lng: number } | undefined,
-    orsKey: string,
-  ) {
+  function runRoute(startPos: { lat: number; lng: number } | undefined, orsKey: string) {
     const start = pickStart(uncheckedPlaygrounds, mode as 'north' | 'south' | 'location', startPos)
-    const end =
-      endMode !== 'off'
-        ? pickStart(uncheckedPlaygrounds, endMode as 'north' | 'south' | 'location', endPos)
-        : undefined
+    const pinnedEnd = pinnedEndId
+      ? uncheckedPlaygrounds.find((p) => p.id === pinnedEndId)
+      : undefined
+    // Don't use pinned end if it happens to be the same as start
+    const end = pinnedEnd?.id !== start.id ? pinnedEnd : undefined
 
-    // Avoid using the same playground as both start and end
-    const effectiveEnd = end?.id === start.id ? undefined : end
-
-    const ordered = nearestNeighbour(uncheckedPlaygrounds, start, effectiveEnd)
+    const ordered = nearestNeighbour(uncheckedPlaygrounds, start, end)
     const ids = ordered.map((p) => p.id)
-    const cacheKey = `${mode}:${endMode}:${ids.join(',')}`
+    const cacheKey = `${mode}:${pinnedEndId ?? ''}:${ids.join(',')}`
 
     setOrderedIds(ids)
 
@@ -184,5 +138,5 @@ export function useRoute(uncheckedPlaygrounds: Playground[]) {
       })
   }
 
-  return { mode, cycle, endMode, cycleEnd, fetchState, geoJSON, orderedIds }
+  return { mode, cycle, fetchState, geoJSON, orderedIds }
 }

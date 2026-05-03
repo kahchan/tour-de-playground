@@ -27,6 +27,7 @@ export default function App() {
   const [showNamePrompt, setShowNamePrompt] = useState(false)
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [pinnedEndId, setPinnedEndId] = useState<string | null>(null)
   const [sidebarHighlight, setSidebarHighlight] = useState<{
     id: string
     seq: number
@@ -62,8 +63,8 @@ export default function App() {
     [visiblePlaygrounds, checkedIds],
   )
 
-  const { mode: routeMode, cycle: cycleRoute, endMode, cycleEnd, fetchState: routeFetchState, geoJSON: routeGeoJSON, orderedIds: routeOrderedIds } =
-    useRoute(uncheckedPlaygrounds)
+  const { mode: routeMode, cycle: cycleRoute, fetchState: routeFetchState, geoJSON: routeGeoJSON, orderedIds: routeOrderedIds } =
+    useRoute(uncheckedPlaygrounds, pinnedEndId)
 
   function handlePopupCheckOff() {
     if (!selected) return
@@ -100,12 +101,15 @@ export default function App() {
 
   function handleSidebarSelect(playground: Playground) {
     setSelected(playground)
-    setSidebarOpen(false)
     setMapFlyTarget((prev) => ({
       lat: playground.lat,
       lng: playground.lng,
       seq: (prev?.seq ?? 0) + 1,
     }))
+  }
+
+  function handleTogglePinEnd(id: string) {
+    setPinnedEndId((prev) => (prev === id ? null : id))
   }
 
   async function handleReset(passphrase: string) {
@@ -138,10 +142,8 @@ export default function App() {
         onToggleDark={toggleDark}
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
         routeMode={routeMode}
-        endMode={endMode}
         routeFetchState={routeFetchState}
         onCycleRoute={import.meta.env.VITE_ORS_KEY ? cycleRoute : undefined}
-        onCycleEnd={import.meta.env.VITE_ORS_KEY ? cycleEnd : undefined}
       />
       <Sidebar
         playgrounds={visiblePlaygrounds}
@@ -150,12 +152,15 @@ export default function App() {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onSelectPlayground={handleSidebarSelect}
+        selectedId={selected?.id ?? null}
         isAdmin={isAdmin}
         disabledIds={disabledIds}
         onToggleDisabled={toggleDisabled}
         onAdminReset={resetAll}
         highlight={sidebarHighlight}
         routeOrder={routeOrderedIds.length > 0 ? routeOrderedIds : undefined}
+        pinnedEndId={pinnedEndId}
+        onTogglePinEnd={handleTogglePinEnd}
       />
       <NameBadge name={name} onChangeName={() => setShowNamePrompt(true)} />
       {error && <div className={styles.errorBanner}>{error}</div>}

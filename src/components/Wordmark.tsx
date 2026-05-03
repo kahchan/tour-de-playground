@@ -8,10 +8,8 @@ interface Props {
   onToggleDark: () => void
   onToggleSidebar: () => void
   routeMode: RouteMode
-  endMode: RouteMode
   routeFetchState: 'idle' | 'loading' | 'ready' | 'error'
   onCycleRoute?: () => void
-  onCycleEnd?: () => void
 }
 
 const ROUTE_ICONS: Record<RouteMode, string> = {
@@ -28,10 +26,8 @@ export default function Wordmark({
   onToggleDark,
   onToggleSidebar,
   routeMode,
-  endMode,
   routeFetchState,
   onCycleRoute,
-  onCycleEnd,
 }: Props) {
   const isLoading = routeFetchState === 'loading'
   const routeIcon = isLoading ? '⟳' : routeFetchState === 'error' ? '✕' : ROUTE_ICONS[routeMode]
@@ -65,17 +61,6 @@ export default function Wordmark({
           title={routeFetchState === 'error' ? 'Route unavailable' : `Start: ${routeMode}`}
         >
           <span className={isLoading ? styles.spin : undefined}>{routeIcon}</span>
-        </button>
-      )}
-      {onCycleEnd && routeMode !== 'off' && (
-        <button
-          className={`${styles.iconBtnSm} ${endMode !== 'off' ? styles.iconBtnActive : ''}`}
-          onClick={onCycleEnd}
-          aria-label={`Route end: ${endMode}`}
-          title={`End: ${endMode}`}
-        >
-          <span className={styles.endLabel}>end</span>
-          <span>{endMode === 'off' ? '—' : ROUTE_ICONS[endMode]}</span>
         </button>
       )}
     </div>

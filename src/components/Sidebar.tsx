@@ -9,12 +9,15 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   onSelectPlayground: (p: Playground) => void
+  selectedId: string | null
   isAdmin: boolean
   disabledIds: Set<string>
   onToggleDisabled: (id: string, on: boolean) => void
   onAdminReset: (passphrase: string) => Promise<void>
   highlight?: { id: string; seq: number } | null
   routeOrder?: string[]
+  pinnedEndId: string | null
+  onTogglePinEnd: (id: string) => void
 }
 
 interface SuburbGroup {
@@ -31,12 +34,15 @@ export default function Sidebar({
   isOpen,
   onClose,
   onSelectPlayground,
+  selectedId,
   isAdmin,
   disabledIds,
   onToggleDisabled,
   onAdminReset,
   highlight,
   routeOrder,
+  pinnedEndId,
+  onTogglePinEnd,
 }: Props) {
   const [expandedSuburbs, setExpandedSuburbs] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState<Filter>('all')
@@ -219,7 +225,7 @@ export default function Sidebar({
                 return (
                   <li key={p.id}>
                     <div
-                      className={`${styles.routeItem} ${checked ? styles.itemChecked : ''}`}
+                      className={`${styles.routeItem} ${checked ? styles.itemChecked : ''} ${selectedId === p.id ? styles.itemSelected : ''}`}
                       onClick={() => onSelectPlayground(p)}
                     >
                       <span className={styles.routePos}>{pos}</span>
@@ -227,9 +233,13 @@ export default function Sidebar({
                         <span className={styles.itemName}>{p.name}</span>
                         {p.suburb && <span className={styles.itemSuburb}>{p.suburb}</span>}
                       </span>
-                      <span className={`${styles.dot} ${checked ? styles.dotChecked : ''}`}>
-                        {checked ? '✓' : ''}
-                      </span>
+                      <button
+                        className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
+                        onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
+                        title={pinnedEndId === p.id ? 'Clear end point' : 'Set as route end'}
+                      >
+                        {pinnedEndId === p.id ? '⊣' : '⊢'}
+                      </button>
                     </div>
                   </li>
                 )
@@ -279,6 +289,7 @@ export default function Sidebar({
                                 checked ? styles.itemChecked : '',
                                 isAdmin && disabled ? styles.itemDisabled : '',
                                 flashId === p.id ? styles.itemFlash : '',
+                                selectedId === p.id ? styles.itemSelected : '',
                               ]
                                 .filter(Boolean)
                                 .join(' ')}
@@ -304,6 +315,15 @@ export default function Sidebar({
                                   </span>
                                 )}
                               </div>
+                              {routeOrder && !checked && (
+                                <button
+                                  className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
+                                  onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
+                                  title={pinnedEndId === p.id ? 'Clear end point' : 'Set as route end'}
+                                >
+                                  {pinnedEndId === p.id ? '⊣' : '⊢'}
+                                </button>
+                              )}
                               {isAdmin && (
                                 <button
                                   className={
