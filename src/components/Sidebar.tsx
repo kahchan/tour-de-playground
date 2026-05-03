@@ -20,6 +20,8 @@ interface Props {
   routeOrder?: string[]
   pinnedEndId: string | null
   onTogglePinEnd: (id: string) => void
+  pinnedStartId: string | null
+  onTogglePinStart: (id: string) => void
 }
 
 interface SuburbGroup {
@@ -47,9 +49,14 @@ export default function Sidebar({
   routeOrder,
   pinnedEndId,
   onTogglePinEnd,
+  pinnedStartId,
+  onTogglePinStart,
 }: Props) {
   const [expandedSuburbs, setExpandedSuburbs] = useState<Set<string>>(new Set())
-  const [filter, setFilter] = useState<Filter>('all')
+  const [filter, setFilter] = useState<Filter>(() => {
+    const saved = localStorage.getItem('tdp:sidebar-filter') as Filter | null
+    return saved === 'undone' || saved === 'route' ? saved : 'all'
+  })
   const [flashId, setFlashId] = useState<string | null>(null)
   const itemRefs = useRef<Map<string, HTMLElement>>(new Map())
   const [resetConfirming, setResetConfirming] = useState(false)
@@ -57,10 +64,15 @@ export default function Sidebar({
   const [resetPending, setResetPending] = useState(false)
   const [resetError, setResetError] = useState<string | null>(null)
 
+  function updateFilter(f: Filter) {
+    setFilter(f)
+    localStorage.setItem('tdp:sidebar-filter', f)
+  }
+
   // If routeOrder disappears, exit route filter
   useEffect(() => {
     if (filter === 'route' && (!routeOrder || routeOrder.length === 0)) {
-      setFilter('all')
+      updateFilter('all')
     }
   }, [routeOrder, filter])
 
@@ -79,15 +91,14 @@ export default function Sidebar({
       }))
   }, [playgrounds])
 
-  // Route view: unchecked playgrounds in TSP order with position numbers
+  // Route view: full frozen sequence with checked items dimmed
   const routeItems = useMemo(() => {
     if (!routeOrder) return []
     const pgMap = new Map(playgrounds.map((p) => [p.id, p]))
     return routeOrder
-      .filter((id) => !checkedIds.has(id))
       .map((id, i) => ({ pos: i + 1, playground: pgMap.get(id) }))
       .filter((x): x is { pos: number; playground: Playground } => x.playground !== undefined)
-  }, [routeOrder, playgrounds, checkedIds])
+  }, [routeOrder, playgrounds])
 
   useEffect(() => {
     if (suburbGroups.length > 0 && expandedSuburbs.size === 0) {
@@ -99,7 +110,7 @@ export default function Sidebar({
     if (!highlight) return
     const { id } = highlight
     if (filter === 'route') {
-      setFilter('all')
+      updateFilter('all')
     }
     const group = suburbGroups.find((g) => g.playgrounds.some((p) => p.id === id))
     if (!group) return
@@ -158,7 +169,7 @@ export default function Sidebar({
           <div className={styles.headerActions}>
             <button
               className={`${styles.filterToggle} ${filter === 'undone' ? styles.filterToggleActive : ''}`}
-              onClick={() => setFilter((f) => (f === 'undone' ? 'all' : 'undone'))}
+              onClick={() => updateFilter(filter === 'undone' ? 'all' : 'undone')}
               title={filter === 'undone' ? 'Show all playgrounds' : 'Show only undone'}
             >
               Undone
@@ -166,7 +177,7 @@ export default function Sidebar({
             {routeOrder && routeOrder.length > 0 && (
               <button
                 className={`${styles.filterToggle} ${filter === 'route' ? styles.filterToggleActive : ''}`}
-                onClick={() => setFilter((f) => (f === 'route' ? 'all' : 'route'))}
+                onClick={() => updateFilter(filter === 'route' ? 'all' : 'route')}
                 title={filter === 'route' ? 'Show all playgrounds' : 'Show in route order'}
               >
                 Route
@@ -238,20 +249,40 @@ export default function Sidebar({
                         {p.suburb && <span className={styles.itemSuburb}>{p.suburb}</span>}
                       </span>
                       {selectedId === p.id && (
-                        <button
-                          className={styles.inlineDoneBtn}
-                          onClick={(e) => { e.stopPropagation(); onCheckOff(p.id) }}
-                        >
-                          ✓ Done
-                        </button>
+                        checked ? (
+                          <button
+                            className={styles.inlineUndoBtn}
+                            onClick={(e) => { e.stopPropagation(); onUndo(p.id) }}
+                          >
+                            Undo
+                          </button>
+                        ) : (
+                          <button
+                            className={styles.inlineDoneBtn}
+                            onClick={(e) => { e.stopPropagation(); onCheckOff(p.id) }}
+                          >
+                            ✓ Done
+                          </button>
+                        )
                       )}
-                      <button
-                        className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
-                        onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
-                        title={pinnedEndId === p.id ? 'Clear end point' : 'Set as route end'}
-                      >
-                        {pinnedEndId === p.id ? '⊣' : '⊢'}
-                      </button>
+                      {!checked && (
+                        <>
+                          <button
+                            className={`${styles.pinStartBtn} ${pinnedStartId === p.id ? styles.pinStartBtnActive : ''}`}
+                            onClick={(e) => { e.stopPropagation(); onTogglePinStart(p.id) }}
+                            title={pinnedStartId === p.id ? 'Clear start point' : 'Set as route start'}
+                          >
+                            ⊣
+                          </button>
+                          <button
+                            className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
+                            onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
+                            title={pinnedEndId === p.id ? 'Clear end point' : 'Set as route end'}
+                          >
+                            ⊢
+                          </button>
+                        </>
+                      )}
                     </div>
                   </li>
                 )
@@ -345,13 +376,22 @@ export default function Sidebar({
                                 )
                               )}
                               {routeOrder && !checked && (
-                                <button
-                                  className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
-                                  onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
-                                  title={pinnedEndId === p.id ? 'Clear end point' : 'Set as route end'}
-                                >
-                                  {pinnedEndId === p.id ? '⊣' : '⊢'}
-                                </button>
+                                <>
+                                  <button
+                                    className={`${styles.pinStartBtn} ${pinnedStartId === p.id ? styles.pinStartBtnActive : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); onTogglePinStart(p.id) }}
+                                    title={pinnedStartId === p.id ? 'Clear start point' : 'Set as route start'}
+                                  >
+                                    ⊣
+                                  </button>
+                                  <button
+                                    className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
+                                    title={pinnedEndId === p.id ? 'Clear end point' : 'Set as route end'}
+                                  >
+                                    ⊢
+                                  </button>
+                                </>
                               )}
                               {isAdmin && (
                                 <button

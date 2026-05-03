@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FeatureCollection, LineString } from 'geojson'
 import type { Playground } from '../types'
-import { nearestNeighbour, pickStart } from '../lib/tsp'
+import { nearestNeighbour, pickStart, sweepOrder, twoOpt } from '../lib/tsp'
 
 export type RouteMode = 'off' | 'north' | 'south' | 'location'
 type FetchState = 'idle' | 'loading' | 'ready' | 'error'
@@ -42,11 +42,19 @@ async function fetchChunk(
   return legs
 }
 
-export function useRoute(uncheckedPlaygrounds: Playground[], pinnedEndId: string | null) {
+export function useRoute(
+  allPlaygrounds: Playground[],
+  pinnedEndId: string | null,
+  pinnedStartId: string | null,
+) {
   const [mode, setMode] = useState<RouteMode>('off')
   const [fetchState, setFetchState] = useState<FetchState>('idle')
   const [geoJSON, setGeoJSON] = useState<FeatureCollection<LineString> | null>(null)
   const [orderedIds, setOrderedIds] = useState<string[]>([])
+
+  // Held in a ref so allPlaygrounds updates (e.g. from check-offs) don't re-trigger the route.
+  const allPlaygroundsRef = useRef(allPlaygrounds)
+  useEffect(() => { allPlaygroundsRef.current = allPlaygrounds }, [allPlaygrounds])
 
   const cacheRef = useRef<Map<string, FeatureCollection<LineString>>>(new Map())
   const abortRef = useRef<AbortController | null>(null)
@@ -65,7 +73,7 @@ export function useRoute(uncheckedPlaygrounds: Playground[], pinnedEndId: string
     }
 
     const orsKey = import.meta.env.VITE_ORS_KEY
-    if (!orsKey || uncheckedPlaygrounds.length < 2) {
+    if (!orsKey || allPlaygroundsRef.current.length < 2) {
       setFetchState('idle')
       setGeoJSON(null)
       setOrderedIds([])
@@ -83,19 +91,24 @@ export function useRoute(uncheckedPlaygrounds: Playground[], pinnedEndId: string
     }
 
     runRoute(undefined, orsKey)
-  }, [mode, pinnedEndId, uncheckedPlaygrounds]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mode, pinnedStartId, pinnedEndId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function runRoute(startPos: { lat: number; lng: number } | undefined, orsKey: string) {
-    const start = pickStart(uncheckedPlaygrounds, mode as 'north' | 'south' | 'location', startPos)
-    const pinnedEnd = pinnedEndId
-      ? uncheckedPlaygrounds.find((p) => p.id === pinnedEndId)
-      : undefined
-    // Don't use pinned end if it happens to be the same as start
+    const playgrounds = allPlaygroundsRef.current
+
+    const pinnedStart = pinnedStartId ? playgrounds.find((p) => p.id === pinnedStartId) : undefined
+    const pinnedEnd = pinnedEndId ? playgrounds.find((p) => p.id === pinnedEndId) : undefined
+
+    const start = pinnedStart ?? pickStart(playgrounds, mode as 'north' | 'south' | 'location', startPos)
     const end = pinnedEnd?.id !== start.id ? pinnedEnd : undefined
 
-    const ordered = nearestNeighbour(uncheckedPlaygrounds, start, end)
+    const rawOrdered = (start && end)
+      ? sweepOrder(playgrounds, start, end)
+      : nearestNeighbour(playgrounds, start, end)
+    const ordered = twoOpt(rawOrdered)
+
     const ids = ordered.map((p) => p.id)
-    const cacheKey = `${mode}:${pinnedEndId ?? ''}:${ids.join(',')}`
+    const cacheKey = `${mode}:${pinnedStartId ?? ''}:${pinnedEndId ?? ''}:${ids.join(',')}`
 
     setOrderedIds(ids)
 

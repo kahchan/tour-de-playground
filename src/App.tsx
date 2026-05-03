@@ -7,7 +7,6 @@ import { useRoute } from './hooks/useRoute'
 import MapView from './components/MapView'
 import Wordmark from './components/Wordmark'
 import NameBadge from './components/NameBadge'
-import MarkerPopup from './components/MarkerPopup'
 import NamePrompt from './components/NamePrompt'
 import Sidebar from './components/Sidebar'
 import ResetPanel from './components/ResetPanel'
@@ -28,6 +27,7 @@ export default function App() {
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [pinnedEndId, setPinnedEndId] = useState<string | null>(null)
+  const [pinnedStartId, setPinnedStartId] = useState<string | null>(null)
   const [sidebarHighlight, setSidebarHighlight] = useState<{
     id: string
     seq: number
@@ -58,30 +58,14 @@ export default function App() {
     [checkIns],
   )
 
-  const uncheckedPlaygrounds = useMemo(
-    () => visiblePlaygrounds.filter((p) => !checkedIds.has(p.id)),
-    [visiblePlaygrounds, checkedIds],
-  )
-
   const { mode: routeMode, cycle: cycleRoute, fetchState: routeFetchState, geoJSON: routeGeoJSON, orderedIds: routeOrderedIds } =
-    useRoute(uncheckedPlaygrounds, pinnedEndId)
+    useRoute(visiblePlaygrounds, pinnedEndId, pinnedStartId)
 
-  function handlePopupCheckOff() {
-    if (!selected) return
-    if (!name) {
-      setPendingId(selected.id)
-      setShowNamePrompt(true)
-    } else {
-      addCheckIn(selected.id, name)
-      setSelected(null)
-    }
-  }
-
-  function handlePopupUndo() {
-    if (!selected) return
-    removeCheckIn(selected.id)
-    setSelected(null)
-  }
+  // Auto-clear pins if the pinned playground gets checked off
+  useEffect(() => {
+    if (pinnedStartId && checkedIds.has(pinnedStartId)) setPinnedStartId(null)
+    if (pinnedEndId && checkedIds.has(pinnedEndId)) setPinnedEndId(null)
+  }, [checkedIds]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleNameSubmit(n: string) {
     setName(n)
@@ -125,6 +109,10 @@ export default function App() {
 
   function handleTogglePinEnd(id: string) {
     setPinnedEndId((prev) => (prev === id ? null : id))
+  }
+
+  function handleTogglePinStart(id: string) {
+    setPinnedStartId((prev) => (prev === id ? null : id))
   }
 
   async function handleReset(passphrase: string) {
@@ -178,20 +166,12 @@ export default function App() {
         routeOrder={routeOrderedIds.length > 0 ? routeOrderedIds : undefined}
         pinnedEndId={pinnedEndId}
         onTogglePinEnd={handleTogglePinEnd}
+        pinnedStartId={pinnedStartId}
+        onTogglePinStart={handleTogglePinStart}
       />
       <NameBadge name={name} onChangeName={() => setShowNamePrompt(true)} />
       {error && <div className={styles.errorBanner}>{error}</div>}
       {isResetMode && <ResetPanel onReset={handleReset} />}
-      {selected && !showNamePrompt && !isResetMode && (
-        <MarkerPopup
-          playground={selected}
-          checkIn={checkIns.find((c) => c.id === selected.id) ?? null}
-          yourName={name}
-          onCheckOff={handlePopupCheckOff}
-          onUndo={handlePopupUndo}
-          onClose={() => setSelected(null)}
-        />
-      )}
       {showNamePrompt && (
         <NamePrompt
           onSubmit={handleNameSubmit}
