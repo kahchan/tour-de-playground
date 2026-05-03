@@ -10,9 +10,11 @@ function dist(a: Point, b: { lat: number; lng: number }): number {
   return dlat * dlat + dlng * dlng
 }
 
-export function nearestNeighbour(points: Point[], start: Point): Point[] {
+export function nearestNeighbour(points: Point[], start: Point, end?: Point): Point[] {
   if (points.length === 0) return []
-  const remaining = new Set(points.filter((p) => p.id !== start.id))
+  const remaining = new Set(
+    points.filter((p) => p.id !== start.id && (!end || p.id !== end.id)),
+  )
   const route: Point[] = [start]
   while (remaining.size > 0) {
     const last = route[route.length - 1]
@@ -28,6 +30,7 @@ export function nearestNeighbour(points: Point[], start: Point): Point[] {
     remaining.delete(nearest!)
     route.push(nearest!)
   }
+  if (end) route.push(end)
   return route
 }
 

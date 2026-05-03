@@ -13,6 +13,7 @@ interface Props {
   routeGeoJSON: FeatureCollection<LineString> | null
   routeOrder: string[]
   selectedId: string | null
+  flyTarget: { lat: number; lng: number; seq: number } | null
 }
 
 const WELLINGTON: [number, number] = [174.7762, -41.2865]
@@ -215,6 +216,7 @@ export default function MapView({
   routeGeoJSON,
   routeOrder,
   selectedId,
+  flyTarget,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -297,6 +299,16 @@ export default function MapView({
       routeGeoJSON ?? { type: 'FeatureCollection', features: [] },
     )
   }, [routeGeoJSON, mapLoaded])
+
+  // Fly to a playground when triggered from the sidebar
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current || !flyTarget) return
+    mapRef.current.easeTo({
+      center: [flyTarget.lng, flyTarget.lat],
+      zoom: Math.max(mapRef.current.getZoom(), 15),
+      duration: 500,
+    })
+  }, [flyTarget?.seq, mapLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Drive per-leg opacity: highlight the leg starting at the selected playground.
   useEffect(() => {

@@ -31,6 +31,11 @@ export default function App() {
     id: string
     seq: number
   } | null>(null)
+  const [mapFlyTarget, setMapFlyTarget] = useState<{
+    lat: number
+    lng: number
+    seq: number
+  } | null>(null)
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}playgrounds.json`)
@@ -57,7 +62,7 @@ export default function App() {
     [visiblePlaygrounds, checkedIds],
   )
 
-  const { mode: routeMode, cycle: cycleRoute, fetchState: routeFetchState, geoJSON: routeGeoJSON, orderedIds: routeOrderedIds } =
+  const { mode: routeMode, cycle: cycleRoute, endMode, cycleEnd, fetchState: routeFetchState, geoJSON: routeGeoJSON, orderedIds: routeOrderedIds } =
     useRoute(uncheckedPlaygrounds)
 
   function handlePopupCheckOff() {
@@ -93,6 +98,16 @@ export default function App() {
     setSidebarHighlight((prev) => ({ id: playground.id, seq: (prev?.seq ?? 0) + 1 }))
   }
 
+  function handleSidebarSelect(playground: Playground) {
+    setSelected(playground)
+    setSidebarOpen(false)
+    setMapFlyTarget((prev) => ({
+      lat: playground.lat,
+      lng: playground.lng,
+      seq: (prev?.seq ?? 0) + 1,
+    }))
+  }
+
   async function handleReset(passphrase: string) {
     if (!import.meta.env.VITE_WORKER_URL)
       throw new Error('No worker URL configured')
@@ -114,6 +129,7 @@ export default function App() {
         routeGeoJSON={routeGeoJSON}
         routeOrder={routeOrderedIds}
         selectedId={selected?.id ?? null}
+        flyTarget={mapFlyTarget}
       />
       <Wordmark
         total={visiblePlaygrounds.length}
@@ -122,8 +138,10 @@ export default function App() {
         onToggleDark={toggleDark}
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
         routeMode={routeMode}
+        endMode={endMode}
         routeFetchState={routeFetchState}
         onCycleRoute={import.meta.env.VITE_ORS_KEY ? cycleRoute : undefined}
+        onCycleEnd={import.meta.env.VITE_ORS_KEY ? cycleEnd : undefined}
       />
       <Sidebar
         playgrounds={visiblePlaygrounds}
@@ -131,6 +149,7 @@ export default function App() {
         checkedIds={checkedIds}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onSelectPlayground={handleSidebarSelect}
         isAdmin={isAdmin}
         disabledIds={disabledIds}
         onToggleDisabled={toggleDisabled}

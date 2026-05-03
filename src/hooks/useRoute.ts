@@ -10,8 +10,6 @@ const MODE_CYCLE: RouteMode[] = ['off', 'north', 'south', 'location']
 const ORS_URL = 'https://api.openrouteservice.org/v2/directions/cycling-mountain/geojson'
 const CHUNK_SIZE = 50
 
-// Overlapping chunks so each chunk boundary shares its endpoint with the next,
-// ensuring no route gap between chunks.
 function chunkOverlapping<T>(arr: T[], size: number): T[][] {
   if (arr.length < 2) return []
   const chunks: T[][] = []
@@ -22,9 +20,6 @@ function chunkOverlapping<T>(arr: T[], size: number): T[][] {
   return chunks
 }
 
-// Returns per-leg coordinate arrays for a single ORS chunk request.
-// ORS way_points gives the coordinate index for each input waypoint, letting us
-// cleanly slice the LineString into one segment per leg.
 async function fetchChunk(
   waypoints: { lat: number; lng: number }[],
   key: string,
@@ -49,6 +44,7 @@ async function fetchChunk(
 
 export function useRoute(uncheckedPlaygrounds: Playground[]) {
   const [mode, setMode] = useState<RouteMode>('off')
+  const [endMode, setEndMode] = useState<RouteMode>('off')
   const [fetchState, setFetchState] = useState<FetchState>('idle')
   const [geoJSON, setGeoJSON] = useState<FeatureCollection<LineString> | null>(null)
   const [orderedIds, setOrderedIds] = useState<string[]>([])
@@ -57,11 +53,17 @@ export function useRoute(uncheckedPlaygrounds: Playground[]) {
   const abortRef = useRef<AbortController | null>(null)
 
   const cycle = useCallback(() => {
-    setMode((m) => {
-      const idx = MODE_CYCLE.indexOf(m)
-      return MODE_CYCLE[(idx + 1) % MODE_CYCLE.length]
-    })
+    setMode((m) => MODE_CYCLE[(MODE_CYCLE.indexOf(m) + 1) % MODE_CYCLE.length])
   }, [])
+
+  const cycleEnd = useCallback(() => {
+    setEndMode((m) => MODE_CYCLE[(MODE_CYCLE.indexOf(m) + 1) % MODE_CYCLE.length])
+  }, [])
+
+  // Reset end mode when route turns off
+  useEffect(() => {
+    if (mode === 'off') setEndMode('off')
+  }, [mode])
 
   useEffect(() => {
     if (mode === 'off') {
@@ -80,70 +82,107 @@ export function useRoute(uncheckedPlaygrounds: Playground[]) {
       return
     }
 
-    if (mode === 'location') {
-      if (!navigator.geolocation) {
-        setMode('off')
-        return
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => runRoute({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => setMode('off'),
+    // Resolve geolocation for start and/or end before computing route
+    resolvePositions(mode, endMode, (startPos, endPos) => {
+      if (mode === 'location' && !startPos) { setMode('off'); return }
+      if (endMode === 'location' && !endPos) { setEndMode('off'); return }
+      runRoute(startPos, endPos, orsKey)
+    })
+  }, [mode, endMode, uncheckedPlaygrounds])
+
+  function resolvePositions(
+    startMode: RouteMode,
+    endModeVal: RouteMode,
+    cb: (
+      startPos: { lat: number; lng: number } | undefined,
+      endPos: { lat: number; lng: number } | undefined,
+    ) => void,
+  ) {
+    const needStart = startMode === 'location'
+    const needEnd = endModeVal === 'location'
+
+    if (!needStart && !needEnd) { cb(undefined, undefined); return }
+
+    if (needStart && needEnd) {
+      navigator.geolocation?.getCurrentPosition(
+        (pos) => {
+          const p = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          cb(p, p)
+        },
+        () => cb(undefined, undefined),
         { timeout: 8000 },
       )
       return
     }
 
-    runRoute(undefined)
+    navigator.geolocation?.getCurrentPosition(
+      (pos) => {
+        const p = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+        cb(needStart ? p : undefined, needEnd ? p : undefined)
+      },
+      () => cb(undefined, undefined),
+      { timeout: 8000 },
+    )
+  }
 
-    function runRoute(userPos: { lat: number; lng: number } | undefined) {
-      const start = pickStart(uncheckedPlaygrounds, mode as 'north' | 'south' | 'location', userPos)
-      const ordered = nearestNeighbour(uncheckedPlaygrounds, start)
-      const ids = ordered.map((p) => p.id)
-      const cacheKey = mode + ':' + ids.join(',')
+  function runRoute(
+    startPos: { lat: number; lng: number } | undefined,
+    endPos: { lat: number; lng: number } | undefined,
+    orsKey: string,
+  ) {
+    const start = pickStart(uncheckedPlaygrounds, mode as 'north' | 'south' | 'location', startPos)
+    const end =
+      endMode !== 'off'
+        ? pickStart(uncheckedPlaygrounds, endMode as 'north' | 'south' | 'location', endPos)
+        : undefined
 
-      setOrderedIds(ids)
+    // Avoid using the same playground as both start and end
+    const effectiveEnd = end?.id === start.id ? undefined : end
 
-      const cached = cacheRef.current.get(cacheKey)
-      if (cached) {
-        setGeoJSON(cached)
-        setFetchState('ready')
-        return
-      }
+    const ordered = nearestNeighbour(uncheckedPlaygrounds, start, effectiveEnd)
+    const ids = ordered.map((p) => p.id)
+    const cacheKey = `${mode}:${endMode}:${ids.join(',')}`
 
-      abortRef.current?.abort()
-      const controller = new AbortController()
-      abortRef.current = controller
-      setFetchState('loading')
+    setOrderedIds(ids)
 
-      const chunks = chunkOverlapping(ordered, CHUNK_SIZE)
-
-      Promise.all(chunks.map((chunk) => fetchChunk(chunk, orsKey, controller.signal)))
-        .then((chunkLegs) => {
-          // Build one Feature per leg with a global legIndex so MapView can
-          // highlight individual segments (e.g. next leg from selected playground).
-          let legIndex = 0
-          const features = chunkLegs.flatMap((legs) =>
-            legs.map((legCoords) => ({
-              type: 'Feature' as const,
-              geometry: { type: 'LineString' as const, coordinates: legCoords },
-              properties: { legIndex: legIndex++ },
-            })),
-          )
-          const result: FeatureCollection<LineString> = {
-            type: 'FeatureCollection',
-            features,
-          }
-          cacheRef.current.set(cacheKey, result)
-          setGeoJSON(result)
-          setFetchState('ready')
-        })
-        .catch((err) => {
-          if (err.name === 'AbortError') return
-          console.error('Route fetch failed:', err)
-          setFetchState('error')
-        })
+    const cached = cacheRef.current.get(cacheKey)
+    if (cached) {
+      setGeoJSON(cached)
+      setFetchState('ready')
+      return
     }
-  }, [mode, uncheckedPlaygrounds])
 
-  return { mode, cycle, fetchState, geoJSON, orderedIds }
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
+    setFetchState('loading')
+
+    const chunks = chunkOverlapping(ordered, CHUNK_SIZE)
+
+    Promise.all(chunks.map((chunk) => fetchChunk(chunk, orsKey, controller.signal)))
+      .then((chunkLegs) => {
+        let legIndex = 0
+        const features = chunkLegs.flatMap((legs) =>
+          legs.map((legCoords) => ({
+            type: 'Feature' as const,
+            geometry: { type: 'LineString' as const, coordinates: legCoords },
+            properties: { legIndex: legIndex++ },
+          })),
+        )
+        const result: FeatureCollection<LineString> = {
+          type: 'FeatureCollection',
+          features,
+        }
+        cacheRef.current.set(cacheKey, result)
+        setGeoJSON(result)
+        setFetchState('ready')
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return
+        console.error('Route fetch failed:', err)
+        setFetchState('error')
+      })
+  }
+
+  return { mode, cycle, endMode, cycleEnd, fetchState, geoJSON, orderedIds }
 }

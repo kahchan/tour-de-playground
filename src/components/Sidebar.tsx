@@ -8,6 +8,7 @@ interface Props {
   checkedIds: Set<string>
   isOpen: boolean
   onClose: () => void
+  onSelectPlayground: (p: Playground) => void
   isAdmin: boolean
   disabledIds: Set<string>
   onToggleDisabled: (id: string, on: boolean) => void
@@ -29,6 +30,7 @@ export default function Sidebar({
   checkedIds,
   isOpen,
   onClose,
+  onSelectPlayground,
   isAdmin,
   disabledIds,
   onToggleDisabled,
@@ -216,7 +218,10 @@ export default function Sidebar({
                 const checked = checkedIds.has(p.id)
                 return (
                   <li key={p.id}>
-                    <div className={`${styles.routeItem} ${checked ? styles.itemChecked : ''}`}>
+                    <div
+                      className={`${styles.routeItem} ${checked ? styles.itemChecked : ''}`}
+                      onClick={() => onSelectPlayground(p)}
+                    >
                       <span className={styles.routePos}>{pos}</span>
                       <span className={styles.routeItemText}>
                         <span className={styles.itemName}>{p.name}</span>
@@ -278,7 +283,10 @@ export default function Sidebar({
                                 .filter(Boolean)
                                 .join(' ')}
                             >
-                              <div className={styles.itemMain}>
+                              <div
+                                className={styles.itemMain}
+                                onClick={() => onSelectPlayground(p)}
+                              >
                                 <span
                                   className={`${styles.dot} ${checked ? styles.dotChecked : ''}`}
                                 >
