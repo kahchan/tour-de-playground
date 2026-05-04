@@ -109,15 +109,25 @@ export default function Sidebar({
   useEffect(() => {
     if (!highlight) return
     const { id } = highlight
-    if (filter === 'route') {
+
+    const inRoute = routeOrder?.includes(id) ?? false
+    const isChecked = checkedIds.has(id)
+    const stayingInRoute = filter === 'route' && inRoute
+
+    if (filter === 'route' && !inRoute) {
+      updateFilter('all')
+    } else if (filter === 'undone' && isChecked) {
       updateFilter('all')
     }
-    const group = suburbGroups.find((g) => g.playgrounds.some((p) => p.id === id))
-    if (!group) return
-    setExpandedSuburbs((prev) => new Set([...prev, group.suburb]))
+
+    if (!stayingInRoute) {
+      const group = suburbGroups.find((g) => g.playgrounds.some((p) => p.id === id))
+      if (group) setExpandedSuburbs((prev) => new Set([...prev, group.suburb]))
+    }
+
     setFlashId(id)
     const scrollTimer = setTimeout(() => {
-      itemRefs.current.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      itemRefs.current.get(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 80)
     const flashTimer = setTimeout(() => setFlashId(null), 1400)
     return () => {
@@ -238,7 +248,13 @@ export default function Sidebar({
               {routeItems.map(({ pos, playground: p }) => {
                 const checked = checkedIds.has(p.id)
                 return (
-                  <li key={p.id}>
+                  <li
+                    key={p.id}
+                    ref={(el) => {
+                      if (el) itemRefs.current.set(p.id, el)
+                      else itemRefs.current.delete(p.id)
+                    }}
+                  >
                     <div
                       className={`${styles.routeItem} ${checked ? styles.itemChecked : ''} ${selectedId === p.id ? styles.itemSelected : ''}`}
                       onClick={() => onSelectPlayground(p)}
