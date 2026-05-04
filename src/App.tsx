@@ -58,7 +58,7 @@ export default function App() {
     [checkIns],
   )
 
-  const { mode: routeMode, cycle: cycleRoute, fetchState: routeFetchState, geoJSON: routeGeoJSON, orderedIds: routeOrderedIds } =
+  const { mode: routeMode, setMode: setRouteMode, fetchState: routeFetchState, geoJSON: routeGeoJSON, orderedIds: routeOrderedIds, routeLegs } =
     useRoute(visiblePlaygrounds, pinnedEndId, pinnedStartId)
 
   // Auto-clear pins if the pinned playground gets checked off
@@ -141,12 +141,7 @@ export default function App() {
       <Wordmark
         total={visiblePlaygrounds.length}
         visited={checkedIds.size}
-        dark={dark}
-        onToggleDark={toggleDark}
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
-        routeMode={routeMode}
-        routeFetchState={routeFetchState}
-        onCycleRoute={import.meta.env.VITE_ORS_KEY ? cycleRoute : undefined}
       />
       <Sidebar
         playgrounds={visiblePlaygrounds}
@@ -168,6 +163,12 @@ export default function App() {
         onTogglePinEnd={handleTogglePinEnd}
         pinnedStartId={pinnedStartId}
         onTogglePinStart={handleTogglePinStart}
+        dark={dark}
+        onToggleDark={toggleDark}
+        routeMode={routeMode}
+        routeFetchState={routeFetchState}
+        onSetRouteMode={import.meta.env.VITE_ORS_KEY ? setRouteMode : undefined}
+        routeLegs={routeLegs.length > 0 ? routeLegs : undefined}
       />
       <NameBadge name={name} onChangeName={() => setShowNamePrompt(true)} />
       {error && <div className={styles.errorBanner}>{error}</div>}

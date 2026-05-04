@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import type { CheckIn, Playground } from '../types'
+import type { RouteMode, LegStat } from '../hooks/useRoute'
 import styles from './Sidebar.module.css'
 
 interface Props {
@@ -22,6 +23,12 @@ interface Props {
   onTogglePinEnd: (id: string) => void
   pinnedStartId: string | null
   onTogglePinStart: (id: string) => void
+  dark: boolean
+  onToggleDark: () => void
+  routeMode?: RouteMode
+  routeFetchState?: 'idle' | 'loading' | 'ready' | 'error'
+  onSetRouteMode?: (mode: RouteMode) => void
+  routeLegs?: LegStat[]
 }
 
 interface SuburbGroup {
@@ -30,6 +37,14 @@ interface SuburbGroup {
 }
 
 type Filter = 'all' | 'undone' | 'route'
+
+function fmtKm(m: number) {
+  return (m / 1000).toFixed(1) + ' km'
+}
+
+function fmtElev(m: number) {
+  return Math.round(m) + ' m↑'
+}
 
 export default function Sidebar({
   playgrounds,
@@ -51,6 +66,12 @@ export default function Sidebar({
   onTogglePinEnd,
   pinnedStartId,
   onTogglePinStart,
+  dark,
+  onToggleDark,
+  routeMode = 'off',
+  routeFetchState = 'idle',
+  onSetRouteMode,
+  routeLegs,
 }: Props) {
   const [expandedSuburbs, setExpandedSuburbs] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState<Filter>(() => {
@@ -96,9 +117,24 @@ export default function Sidebar({
     if (!routeOrder) return []
     const pgMap = new Map(playgrounds.map((p) => [p.id, p]))
     return routeOrder
-      .map((id, i) => ({ pos: i + 1, playground: pgMap.get(id) }))
-      .filter((x): x is { pos: number; playground: Playground } => x.playground !== undefined)
+      .map((id, i) => ({ pos: i + 1, playground: pgMap.get(id), legIdx: i }))
+      .filter((x): x is { pos: number; playground: Playground; legIdx: number } => x.playground !== undefined)
   }, [routeOrder, playgrounds])
+
+  const routeLegMap = useMemo(() => {
+    if (!routeLegs) return new Map<string, LegStat>()
+    return new Map(routeLegs.map((l) => [l.id, l]))
+  }, [routeLegs])
+
+  const { totalDistance, totalElevation, remainingCount } = useMemo(() => {
+    if (!routeLegs || routeLegs.length === 0) return { totalDistance: 0, totalElevation: 0, remainingCount: 0 }
+    const unchecked = routeItems.filter(({ playground: p }) => !checkedIds.has(p.id))
+    const total = routeLegs.reduce(
+      (acc, l) => ({ distance: acc.distance + l.distance, elevation: acc.elevation + l.elevationGain }),
+      { distance: 0, elevation: 0 },
+    )
+    return { totalDistance: total.distance, totalElevation: total.elevation, remainingCount: unchecked.length }
+  }, [routeLegs, routeItems, checkedIds])
 
   useEffect(() => {
     if (suburbGroups.length > 0 && expandedSuburbs.size === 0) {
@@ -165,18 +201,41 @@ export default function Sidebar({
     setResetError(null)
   }
 
+  const isRouteLoading = routeFetchState === 'loading'
+  const isRouteError = routeFetchState === 'error'
+  const routeOn = routeMode !== 'off'
+  const isCustomRoute = !!(pinnedStartId && pinnedEndId)
+
   return (
     <>
       {isOpen && <div className={styles.backdrop} onClick={onClose} />}
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
         <div className={styles.header}>
-          <div className={styles.headerText}>
-            <span className={styles.title}>Playgrounds</span>
-            <span className={styles.progress}>
-              {checkedIds.size} / {playgrounds.length} done
-            </span>
+          <div className={styles.headerRow1}>
+            <div className={styles.headerText}>
+              <span className={styles.title}>Playgrounds</span>
+              <span className={styles.progress}>
+                {checkedIds.size} / {playgrounds.length} done
+              </span>
+            </div>
+            <div className={styles.headerIcons}>
+              <button
+                className={styles.themeBtn}
+                onClick={onToggleDark}
+                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {dark ? '☀︎' : '☾'}
+              </button>
+              <button
+                className={styles.closeBtn}
+                onClick={onClose}
+                aria-label="Close sidebar"
+              >
+                ×
+              </button>
+            </div>
           </div>
-          <div className={styles.headerActions}>
+          <div className={styles.headerRow2}>
             <button
               className={`${styles.filterToggle} ${filter === 'undone' ? styles.filterToggleActive : ''}`}
               onClick={() => updateFilter(filter === 'undone' ? 'all' : 'undone')}
@@ -184,13 +243,53 @@ export default function Sidebar({
             >
               Undone
             </button>
+            {onSetRouteMode && (
+              <>
+                <button
+                  className={[
+                    styles.routeBtn,
+                    routeOn ? styles.routeBtnActive : '',
+                    isRouteLoading ? styles.routeBtnLoading : '',
+                    isRouteError ? styles.routeBtnError : '',
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => onSetRouteMode(routeOn ? 'off' : 'north')}
+                  title={isRouteError ? 'Route unavailable' : routeOn ? 'Turn route off' : 'Turn route on'}
+                >
+                  {isRouteLoading ? <span className={styles.spin}>⟳</span> : null}
+                  Route
+                </button>
+                {routeOn && (
+                  isCustomRoute ? (
+                    <span className={styles.routeDirectionCustom}>Custom</span>
+                  ) : (
+                    <span className={styles.routeDirectionGroup}>
+                      <button
+                        className={`${styles.routeDirectionBtn} ${routeMode === 'north' ? styles.routeDirectionBtnActive : ''}`}
+                        onClick={() => onSetRouteMode('north')}
+                        title="Start from northernmost"
+                      >↓N</button>
+                      <button
+                        className={`${styles.routeDirectionBtn} ${routeMode === 'south' ? styles.routeDirectionBtnActive : ''}`}
+                        onClick={() => onSetRouteMode('south')}
+                        title="Start from southernmost"
+                      >↑S</button>
+                      <button
+                        className={`${styles.routeDirectionBtn} ${routeMode === 'location' ? styles.routeDirectionBtnActive : ''}`}
+                        onClick={() => onSetRouteMode('location')}
+                        title="Start from your location"
+                      >⊙</button>
+                    </span>
+                  )
+                )}
+              </>
+            )}
             {routeOrder && routeOrder.length > 0 && (
               <button
                 className={`${styles.filterToggle} ${filter === 'route' ? styles.filterToggleActive : ''}`}
                 onClick={() => updateFilter(filter === 'route' ? 'all' : 'route')}
                 title={filter === 'route' ? 'Show all playgrounds' : 'Show in route order'}
               >
-                Route
+                List
               </button>
             )}
             {isAdmin && !resetConfirming && (
@@ -202,13 +301,6 @@ export default function Sidebar({
                 Reset
               </button>
             )}
-            <button
-              className={styles.closeBtn}
-              onClick={onClose}
-              aria-label="Close sidebar"
-            >
-              ×
-            </button>
           </div>
         </div>
 
@@ -245,8 +337,21 @@ export default function Sidebar({
         <div className={styles.body}>
           {filter === 'route' ? (
             <ul className={styles.routeList}>
-              {routeItems.map(({ pos, playground: p }) => {
+              {routeLegs && routeLegs.length > 0 && (
+                <li className={styles.routeTotalsRow}>
+                  <span className={styles.routeTotalsLabel}>Total</span>
+                  <span className={styles.routeTotalsStats}>
+                    {fmtKm(totalDistance)} · {fmtElev(totalElevation)}
+                  </span>
+                  <span className={styles.routeTotalsRemaining}>
+                    {remainingCount} stop{remainingCount !== 1 ? 's' : ''} remaining
+                  </span>
+                </li>
+              )}
+              {routeItems.map(({ pos, playground: p, legIdx }) => {
                 const checked = checkedIds.has(p.id)
+                const legStat = routeLegMap.get(p.id)
+                const hasStats = legStat !== undefined && (legIdx > 0 || legStat.distance > 0)
                 return (
                   <li
                     key={p.id}
@@ -263,6 +368,11 @@ export default function Sidebar({
                       <span className={styles.routeItemText}>
                         <span className={styles.itemName}>{p.name}</span>
                         {p.suburb && <span className={styles.itemSuburb}>{p.suburb}</span>}
+                        {hasStats && (
+                          <span className={styles.legStats}>
+                            {fmtKm(legStat!.distance)} · +{fmtElev(legStat!.elevationGain)}
+                          </span>
+                        )}
                       </span>
                       {selectedId === p.id && (
                         checked ? (

@@ -66,57 +66,6 @@
   opacity: 0.7;
 }
 
-.iconBtnActive {
-  background: var(--color-teal);
-  color: var(--color-bg);
-  border-color: var(--color-teal);
-}
-
-.iconBtnLoading {
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.iconBtnSm {
-  background: var(--color-surface);
-  border: 1px solid var(--color-teal-border);
-  border-radius: 10px;
-  height: 36px;
-  padding: 0 0.5rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  cursor: pointer;
-  color: var(--color-text);
-  transition: opacity 0.15s;
-  white-space: nowrap;
-  font-family: inherit;
-  flex-shrink: 0;
-}
-
-.iconBtnSm:active {
-  opacity: 0.7;
-}
-
-.endLabel {
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-muted);
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.spin {
-  display: inline-block;
-  animation: spin 0.9s linear infinite;
-}
-
 .listIcon {
   font-size: 1.1rem;
   font-weight: 400;

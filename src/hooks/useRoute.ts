@@ -6,6 +6,12 @@ import { nearestNeighbour, pickStart, sweepOrder, twoOpt } from '../lib/tsp'
 export type RouteMode = 'off' | 'north' | 'south' | 'location'
 type FetchState = 'idle' | 'loading' | 'ready' | 'error'
 
+export interface LegStat {
+  id: string
+  distance: number
+  elevationGain: number
+}
+
 const MODE_CYCLE: RouteMode[] = ['off', 'north', 'south', 'location']
 const ORS_URL = 'https://api.openrouteservice.org/v2/directions/cycling-mountain/geojson'
 const CHUNK_SIZE = 50
@@ -20,26 +26,49 @@ function chunkOverlapping<T>(arr: T[], size: number): T[][] {
   return chunks
 }
 
+
+interface ChunkResult {
+  legs: [number, number, number][][]
+  legStats: { distance: number; elevationGain: number }[]
+}
+
+interface CacheEntry {
+  geoJSON: FeatureCollection<LineString>
+  routeLegs: LegStat[]
+}
+
 async function fetchChunk(
   waypoints: { lat: number; lng: number }[],
   key: string,
   signal: AbortSignal,
-): Promise<[number, number][][]> {
+): Promise<ChunkResult> {
   const res = await fetch(ORS_URL, {
     method: 'POST',
     headers: { Authorization: key, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ coordinates: waypoints.map((p) => [p.lng, p.lat]) }),
+    body: JSON.stringify({
+      coordinates: waypoints.map((p) => [p.lng, p.lat]),
+      elevation: true,
+    }),
     signal,
   })
   if (!res.ok) throw new Error(`ORS ${res.status}`)
   const data = await res.json()
-  const coords: [number, number][] = data.features[0].geometry.coordinates
-  const wayPts: number[] = data.features[0].properties.way_points
-  const legs: [number, number][][] = []
+  const feature = data.features[0]
+  const coords: [number, number, number][] = feature.geometry.coordinates
+  const wayPts: number[] = feature.properties.way_points
+  // ORS pre-smooths elevation internally; use segments[i].ascent + distance directly
+  const segments: { distance: number; ascent?: number }[] =
+    feature.properties.segments ?? []
+  const legs: [number, number, number][][] = []
+  const legStats: { distance: number; elevationGain: number }[] = []
   for (let i = 0; i < wayPts.length - 1; i++) {
     legs.push(coords.slice(wayPts[i], wayPts[i + 1] + 1))
+    legStats.push({
+      distance: segments[i]?.distance ?? 0,
+      elevationGain: segments[i]?.ascent ?? 0,
+    })
   }
-  return legs
+  return { legs, legStats }
 }
 
 export function useRoute(
@@ -51,12 +80,13 @@ export function useRoute(
   const [fetchState, setFetchState] = useState<FetchState>('idle')
   const [geoJSON, setGeoJSON] = useState<FeatureCollection<LineString> | null>(null)
   const [orderedIds, setOrderedIds] = useState<string[]>([])
+  const [routeLegs, setRouteLegs] = useState<LegStat[]>([])
 
   // Held in a ref so allPlaygrounds updates (e.g. from check-offs) don't re-trigger the route.
   const allPlaygroundsRef = useRef(allPlaygrounds)
   useEffect(() => { allPlaygroundsRef.current = allPlaygrounds }, [allPlaygrounds])
 
-  const cacheRef = useRef<Map<string, FeatureCollection<LineString>>>(new Map())
+  const cacheRef = useRef<Map<string, CacheEntry>>(new Map())
   const abortRef = useRef<AbortController | null>(null)
 
   const cycle = useCallback(() => {
@@ -69,6 +99,7 @@ export function useRoute(
       setFetchState('idle')
       setGeoJSON(null)
       setOrderedIds([])
+      setRouteLegs([])
       return
     }
 
@@ -77,6 +108,7 @@ export function useRoute(
       setFetchState('idle')
       setGeoJSON(null)
       setOrderedIds([])
+      setRouteLegs([])
       return
     }
 
@@ -114,7 +146,8 @@ export function useRoute(
 
     const cached = cacheRef.current.get(cacheKey)
     if (cached) {
-      setGeoJSON(cached)
+      setGeoJSON(cached.geoJSON)
+      setRouteLegs(cached.routeLegs)
       setFetchState('ready')
       return
     }
@@ -127,21 +160,29 @@ export function useRoute(
     const chunks = chunkOverlapping(ordered, CHUNK_SIZE)
 
     Promise.all(chunks.map((chunk) => fetchChunk(chunk, orsKey, controller.signal)))
-      .then((chunkLegs) => {
+      .then((chunkResults) => {
         let legIndex = 0
-        const features = chunkLegs.flatMap((legs) =>
+        const features = chunkResults.flatMap(({ legs }) =>
           legs.map((legCoords) => ({
             type: 'Feature' as const,
             geometry: { type: 'LineString' as const, coordinates: legCoords },
             properties: { legIndex: legIndex++ },
           })),
         )
+        const allLegStats = chunkResults.flatMap(({ legStats }) => legStats)
+        // allLegStats[i] = leg from ids[i] → ids[i+1]; routeLegs[0] starts with distance 0 (no approach)
+        const newRouteLegs: LegStat[] = ids.map((id, i) =>
+          i === 0
+            ? { id, distance: 0, elevationGain: 0 }
+            : { id, ...allLegStats[i - 1] },
+        )
         const result: FeatureCollection<LineString> = {
           type: 'FeatureCollection',
           features,
         }
-        cacheRef.current.set(cacheKey, result)
+        cacheRef.current.set(cacheKey, { geoJSON: result, routeLegs: newRouteLegs })
         setGeoJSON(result)
+        setRouteLegs(newRouteLegs)
         setFetchState('ready')
       })
       .catch((err) => {
@@ -151,5 +192,5 @@ export function useRoute(
       })
   }
 
-  return { mode, cycle, fetchState, geoJSON, orderedIds }
+  return { mode, cycle, setMode, fetchState, geoJSON, orderedIds, routeLegs }
 }

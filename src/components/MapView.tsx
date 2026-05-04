@@ -222,16 +222,20 @@ export default function MapView({
   const mapRef = useRef<maplibregl.Map | null>(null)
   const onClickRef = useRef(onMarkerClick)
   const playgroundsRef = useRef(playgrounds)
+  const checkedIdsRef = useRef(checkedIds)
+  const routeOrderRef = useRef(routeOrder)
+  const routeGeoJSONRef = useRef(routeGeoJSON)
+  const darkModeRef = useRef(darkMode)
   const [mapLoaded, setMapLoaded] = useState(false)
   const mapReadyRef = useRef(false)
 
-  useEffect(() => {
-    onClickRef.current = onMarkerClick
-  }, [onMarkerClick])
-
-  useEffect(() => {
-    playgroundsRef.current = playgrounds
-  }, [playgrounds])
+  useEffect(() => { onClickRef.current = onMarkerClick }, [onMarkerClick])
+  useEffect(() => { playgroundsRef.current = playgrounds }, [playgrounds])
+  useEffect(() => { checkedIdsRef.current = checkedIds }, [checkedIds])
+  useEffect(() => { routeOrderRef.current = routeOrder }, [routeOrder])
+  useEffect(() => { routeGeoJSONRef.current = routeGeoJSON }, [routeGeoJSON])
+  // Must be defined before the darkMode setStyle effect so the ref is current when style.load fires
+  useEffect(() => { darkModeRef.current = darkMode }, [darkMode])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -251,8 +255,16 @@ export default function MapView({
 
     map.addControl(new maplibregl.NavigationControl(), 'bottom-left')
 
-    map.on('load', () => {
-      addSourcesAndLayers(map, onClickRef, playgroundsRef, darkMode)
+    // Persistent listener — fires on initial load and after every setStyle() call.
+    // Guard on layers (not sources) because setStyle diff-mode keeps user sources but removes all layers.
+    map.on('style.load', () => {
+      if (!map.getLayer('route-line')) {
+        addSourcesAndLayers(map, onClickRef, playgroundsRef, darkModeRef.current)
+      }
+      ;(map.getSource('playgrounds') as maplibregl.GeoJSONSource)
+        ?.setData(toGeoJSON(playgroundsRef.current, checkedIdsRef.current, routeOrderRef.current))
+      ;(map.getSource('route') as maplibregl.GeoJSONSource)
+        ?.setData(routeGeoJSONRef.current ?? { type: 'FeatureCollection', features: [] })
       mapReadyRef.current = true
       setMapLoaded(true)
     })
@@ -265,21 +277,15 @@ export default function MapView({
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Dark mode — swap the style; { diff: false } forces a clean wipe of all sources + layers
+  // so the style.load handler can safely re-add everything without source-already-exists errors.
   useEffect(() => {
-    if (!mapReadyRef.current) return
     const map = mapRef.current
-    if (!map) return
     const key = import.meta.env.VITE_MAPTILER_KEY
-    if (!key) return
-
+    if (!map || !key || !mapReadyRef.current) return
     mapReadyRef.current = false
     setMapLoaded(false)
-    map.setStyle(getStyleUrl(darkMode, key))
-    map.once('style.load', () => {
-      addSourcesAndLayers(map, onClickRef, playgroundsRef, darkMode)
-      mapReadyRef.current = true
-      setMapLoaded(true)
-    })
+    map.setStyle(getStyleUrl(darkMode, key), { diff: false })
   }, [darkMode]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
