@@ -13,7 +13,7 @@ interface Props {
   routeGeoJSON: FeatureCollection<LineString> | null
   routeOrder: string[]
   selectedId: string | null
-  flyTarget: { lat: number; lng: number; seq: number } | null
+  flyTarget: { lat: number; lng: number; nextLat?: number; nextLng?: number; seq: number } | null
 }
 
 const WELLINGTON: [number, number] = [174.7762, -41.2865]
@@ -306,14 +306,32 @@ export default function MapView({
     )
   }, [routeGeoJSON, mapLoaded])
 
-  // Fly to a playground when triggered from the sidebar
+  // Fly to a playground when triggered from the sidebar.
+  // If a next-stop is provided (route list click), fit both markers in view with
+  // sidebar-aware padding so neither is hidden behind the panel.
   useEffect(() => {
     if (!mapLoaded || !mapRef.current || !flyTarget) return
-    mapRef.current.easeTo({
-      center: [flyTarget.lng, flyTarget.lat],
-      zoom: Math.max(mapRef.current.getZoom(), 15),
-      duration: 500,
-    })
+    const map = mapRef.current
+
+    if (flyTarget.nextLat !== undefined && flyTarget.nextLng !== undefined) {
+      const isDesktop = window.innerWidth >= 640
+      const padding = isDesktop
+        ? { top: 80, bottom: 80, left: 80, right: 392 }
+        : { top: 60, bottom: Math.round(window.innerHeight * 0.65) + 20, left: 20, right: 20 }
+      map.fitBounds(
+        [
+          [Math.min(flyTarget.lng, flyTarget.nextLng), Math.min(flyTarget.lat, flyTarget.nextLat)],
+          [Math.max(flyTarget.lng, flyTarget.nextLng), Math.max(flyTarget.lat, flyTarget.nextLat)],
+        ],
+        { padding, maxZoom: 16, duration: 600 },
+      )
+    } else {
+      map.easeTo({
+        center: [flyTarget.lng, flyTarget.lat],
+        zoom: Math.max(map.getZoom(), 15),
+        duration: 500,
+      })
+    }
   }, [flyTarget?.seq, mapLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Drive per-leg opacity: highlight the leg starting at the selected playground.

@@ -35,6 +35,8 @@ export default function App() {
   const [mapFlyTarget, setMapFlyTarget] = useState<{
     lat: number
     lng: number
+    nextLat?: number
+    nextLng?: number
     seq: number
   } | null>(null)
 
@@ -85,9 +87,14 @@ export default function App() {
 
   function handleSidebarSelect(playground: Playground) {
     setSelected(playground)
+    const routeIdx = routeOrderedIds.indexOf(playground.id)
+    const nextId = routeIdx >= 0 ? routeOrderedIds[routeIdx + 1] : undefined
+    const nextPg = nextId ? visiblePlaygrounds.find((p) => p.id === nextId) : undefined
     setMapFlyTarget((prev) => ({
       lat: playground.lat,
       lng: playground.lng,
+      nextLat: nextPg?.lat,
+      nextLng: nextPg?.lng,
       seq: (prev?.seq ?? 0) + 1,
     }))
   }
