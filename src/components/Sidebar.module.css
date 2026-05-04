@@ -739,6 +739,14 @@
   flex-wrap: wrap;
 }
 
+@media (min-width: 640px) {
+  .routeTotalsRow {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+}
+
 .routeTotalsLabel {
   font-size: 0.7em;
   font-weight: 700;
