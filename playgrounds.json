@@ -283,7 +283,7 @@
     "name": "Grenada Village Play Area",
     "lat": -41.2089062939733,
     "lng": 174.82162701613885,
-    "suburb": "Grenada Village",
+    "suburb": "Grenada",
     "source": "wcc",
     "included": true
   },
@@ -292,7 +292,7 @@
     "name": "Grenada North Park Play Area",
     "lat": -41.18634282252782,
     "lng": 174.8376104418678,
-    "suburb": "Grenada North",
+    "suburb": "Grenada",
     "source": "wcc",
     "included": true
   },
@@ -922,7 +922,7 @@
     "name": "Parliament Play Area",
     "lat": -41.27813103047322,
     "lng": 174.77754149897598,
-    "suburb": null,
+    "suburb": "Thorndon",
     "source": "wcc",
     "included": true
   },
@@ -994,7 +994,7 @@
     "name": "Playground 2920",
     "lat": -41.31847690455695,
     "lng": 174.78674150854815,
-    "suburb": null,
+    "suburb": "Newtown",
     "source": "wcc",
     "included": true
   }
