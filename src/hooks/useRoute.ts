@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FeatureCollection, LineString } from 'geojson'
 import type { Playground } from '../types'
-import { clusterFirstRoute, euclidean, pickStart } from '../lib/tsp'
-import { buildMatrix, getCachedMatrix, setCachedMatrix } from '../lib/matrix'
+import { clusterFirstRoute, euclidean, pickStart, type Point } from '../lib/tsp'
 
 export type RouteMode = 'off' | 'north' | 'south' | 'location'
 type FetchState = 'idle' | 'loading' | 'ready' | 'error'
@@ -16,6 +15,7 @@ export interface LegStat {
 const MODE_CYCLE: RouteMode[] = ['off', 'north', 'south', 'location']
 const ORS_DIRECTIONS_URL =
   'https://api.openrouteservice.org/v2/directions/cycling-mountain/geojson'
+const ORS_OPTIMIZATION_URL = 'https://api.openrouteservice.org/optimization'
 const CHUNK_SIZE = 50
 
 function chunkOverlapping<T>(arr: T[], size: number): T[][] {
@@ -64,19 +64,20 @@ async function fetchChunk(
   for (let i = 0; i < wayPts.length - 1; i++) {
     const legCoords = coords.slice(wayPts[i], wayPts[i + 1] + 1)
     legs.push(legCoords)
-    // Prefer ORS's pre-smoothed ascent value. Summing raw coordinate Z-deltas
-    // accumulates DEM noise over hundreds of dense points and inflates totals
-    // by orders of magnitude. Fall back to coordinate sum only if ascent is
-    // absent (uncommon — ORS includes it whenever elevation:true is set).
     const orsAscent = segments[i]?.ascent
+    const orsDistance = segments[i]?.distance ?? 0
+    // ORS ascent is pre-smoothed and usually reliable. Reject if it implies an
+    // average gradient > 30% — physically impossible for a cycling leg and a
+    // sign of a bad SRTM tile. Allow a 50 m floor so short legs aren't
+    // over-penalised.
+    const orsAscentPlausible =
+      orsAscent != null && orsAscent <= Math.max(orsDistance * 0.3, 50)
     let elevationGain: number
-    if (orsAscent != null) {
-      // ORS pre-smooths its DEM before summing — use that directly.
+    if (orsAscentPlausible) {
       elevationGain = orsAscent
     } else {
-      // Rare fallback: subsample to ~every 30 coords to suppress DEM noise.
-      // Summing every raw Z-delta over hundreds of dense routing points
-      // accumulates noise into wildly inflated totals (tens of thousands of metres).
+      // Subsample to ~30 points to suppress DEM noise and skip localised
+      // SRTM spikes without summing every dense routing coordinate.
       const step = Math.max(1, Math.floor(legCoords.length / 30))
       elevationGain = 0
       for (let k = step; k < legCoords.length; k += step) {
@@ -84,9 +85,50 @@ async function fetchChunk(
         if (dz > 0) elevationGain += dz
       }
     }
-    legStats.push({ distance: segments[i]?.distance ?? 0, elevationGain })
+    legStats.push({ distance: orsDistance, elevationGain })
   }
   return { legs, legStats }
+}
+
+// Ask ORS Vroom to optimise the visit order. Returns playground ids in the
+// order Vroom recommends, with start first and (optional) pinned end last.
+async function fetchVroomOrder(
+  playgrounds: Playground[],
+  start: Point,
+  end: Point | undefined,
+  orsKey: string,
+  signal: AbortSignal,
+): Promise<string[]> {
+  // Jobs = every playground that isn't the fixed start or end.
+  const jobPgs = playgrounds.filter(
+    (p) => p.id !== start.id && (!end || p.id !== end.id),
+  )
+  const jobs = jobPgs.map((p, i) => ({ id: i, location: [p.lng, p.lat] }))
+
+  const vehicle: Record<string, unknown> = {
+    id: 0,
+    profile: 'cycling-mountain',
+    start: [start.lng, start.lat],
+  }
+  if (end) vehicle.end = [end.lng, end.lat]
+
+  const res = await fetch(ORS_OPTIMIZATION_URL, {
+    method: 'POST',
+    headers: { Authorization: orsKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jobs, vehicles: [vehicle] }),
+    signal,
+  })
+  if (!res.ok) throw new Error(`ORS optimization ${res.status}`)
+  const data = await res.json()
+  const route = data.routes?.[0]
+  if (!route) throw new Error('No route in optimization response')
+
+  const ids: string[] = [start.id]
+  for (const step of route.steps as { type: string; id?: number }[]) {
+    if (step.type === 'job' && step.id != null) ids.push(jobPgs[step.id].id)
+  }
+  if (end) ids.push(end.id)
+  return ids
 }
 
 export function useRoute(
@@ -96,21 +138,14 @@ export function useRoute(
 ) {
   const [mode, setMode] = useState<RouteMode>('off')
   const [fetchState, setFetchState] = useState<FetchState>('idle')
-  const [geoJSON, setGeoJSON] = useState<FeatureCollection<LineString> | null>(
-    null,
-  )
+  const [geoJSON, setGeoJSON] = useState<FeatureCollection<LineString> | null>(null)
   const [orderedIds, setOrderedIds] = useState<string[]>([])
   const [routeLegs, setRouteLegs] = useState<LegStat[]>([])
 
-  // Stable ref so check-off updates don't retrigger the route.
   const allPlaygroundsRef = useRef(allPlaygrounds)
   useEffect(() => {
     allPlaygroundsRef.current = allPlaygrounds
   }, [allPlaygrounds])
-
-  // Matrix is cached here across mode changes; rebuilt only when playgrounds change.
-  const matrixRef = useRef<number[][] | null>(null)
-  const matrixHashRef = useRef<string>('')
 
   const routeCacheRef = useRef<Map<string, CacheEntry>>(new Map())
   const abortRef = useRef<AbortController | null>(null)
@@ -145,10 +180,7 @@ export function useRoute(
       }
       navigator.geolocation.getCurrentPosition(
         (pos) =>
-          runRoute(
-            { lat: pos.coords.latitude, lng: pos.coords.longitude },
-            orsKey,
-          ),
+          runRoute({ lat: pos.coords.latitude, lng: pos.coords.longitude }, orsKey),
         () => setMode('off'),
         { timeout: 8000 },
       )
@@ -167,44 +199,8 @@ export function useRoute(
     abortRef.current?.abort()
     const controller = new AbortController()
     abortRef.current = controller
-
     setFetchState('loading')
 
-    // ── Load or build the cost matrix ────────────────────────────────────────
-    const hash = playgrounds
-      .map((p) => p.id)
-      .sort()
-      .join(',')
-
-    let matrix = matrixRef.current
-    if (!matrix || matrixHashRef.current !== hash) {
-      matrix = getCachedMatrix(playgrounds)
-      if (!matrix) {
-        try {
-          matrix = await buildMatrix(playgrounds, orsKey, controller.signal)
-          setCachedMatrix(playgrounds, matrix)
-        } catch (err) {
-          if ((err as Error).name === 'AbortError') return
-          console.warn(
-            'Matrix build failed — falling back to straight-line cost',
-            err,
-          )
-          matrix = null
-        }
-      }
-      matrixRef.current = matrix
-      matrixHashRef.current = hash
-    }
-
-    // ── Build cost function ───────────────────────────────────────────────────
-    const idxOf = new Map(playgrounds.map((p, i) => [p.id, i]))
-    const cost =
-      matrix != null
-        ? (a: { id: string }, b: { id: string }) =>
-            matrix![idxOf.get(a.id)!][idxOf.get(b.id)!]
-        : euclidean
-
-    // ── TSP: cluster-first, then global 2-opt ─────────────────────────────────
     const pinnedStart = pinnedStartId
       ? playgrounds.find((p) => p.id === pinnedStartId)
       : undefined
@@ -217,11 +213,19 @@ export function useRoute(
       pickStart(playgrounds, mode as 'north' | 'south' | 'location', startPos)
     const end = pinnedEnd?.id !== start.id ? pinnedEnd : undefined
 
-    const ordered = clusterFirstRoute(playgrounds, start, end, cost)
-    const ids = ordered.map((p) => p.id)
+    // ── Visit order: Vroom first, cluster-first TSP as fallback ──────────────
+    let ids: string[]
+    try {
+      ids = await fetchVroomOrder(playgrounds, start, end, orsKey, controller.signal)
+    } catch (err) {
+      if ((err as Error).name === 'AbortError') return
+      console.warn('Vroom failed — falling back to cluster-first TSP:', err)
+      ids = clusterFirstRoute(playgrounds, start, end, euclidean).map((p) => p.id)
+    }
+
     setOrderedIds(ids)
 
-    // ── ORS directions (for drawing) ──────────────────────────────────────────
+    // ── ORS directions (for drawing the route on the map) ─────────────────────
     const cacheKey = `${mode}:${pinnedStartId ?? ''}:${pinnedEndId ?? ''}:${ids.join(',')}`
     const cached = routeCacheRef.current.get(cacheKey)
     if (cached) {
@@ -231,11 +235,12 @@ export function useRoute(
       return
     }
 
-    const chunks = chunkOverlapping(ordered, CHUNK_SIZE)
+    const orderedPgs = ids
+      .map((id) => playgrounds.find((p) => p.id === id))
+      .filter((p): p is Playground => p !== undefined)
+    const chunks = chunkOverlapping(orderedPgs, CHUNK_SIZE)
 
-    Promise.all(
-      chunks.map((chunk) => fetchChunk(chunk, orsKey, controller.signal)),
-    )
+    Promise.all(chunks.map((chunk) => fetchChunk(chunk, orsKey, controller.signal)))
       .then((chunkResults) => {
         let legIndex = 0
         const features = chunkResults.flatMap(({ legs }) =>
@@ -251,14 +256,8 @@ export function useRoute(
             ? { id, distance: 0, elevationGain: 0 }
             : { id, ...allLegStats[i - 1] },
         )
-        const result: FeatureCollection<LineString> = {
-          type: 'FeatureCollection',
-          features,
-        }
-        routeCacheRef.current.set(cacheKey, {
-          geoJSON: result,
-          routeLegs: newRouteLegs,
-        })
+        const result: FeatureCollection<LineString> = { type: 'FeatureCollection', features }
+        routeCacheRef.current.set(cacheKey, { geoJSON: result, routeLegs: newRouteLegs })
         setGeoJSON(result)
         setRouteLegs(newRouteLegs)
         setFetchState('ready')
