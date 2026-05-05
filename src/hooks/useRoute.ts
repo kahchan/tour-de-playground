@@ -66,12 +66,12 @@ async function fetchChunk(
   const feature = data.features[0]
   const coords: [number, number, number][] = feature.geometry.coordinates
   const wayPts: number[] = feature.properties.way_points
-  const segments: { distance: number; ascent?: number }[] =
+  const segments: { distance: number; ascent?: number; steps?: { distance: number; instruction: string; name: string; type: number }[] }[] =
     feature.properties.segments ?? []
   const waytypeValues: [number, number, number][] =
     feature.extras?.waytype?.values ?? []
   const legs: [number, number, number][][] = []
-  const legStats: { distance: number; elevationGain: number; isMtb: boolean }[] = []
+  const legStats: { distance: number; elevationGain: number; isMtb: boolean; steps: RouteStep[] }[] = []
   for (let i = 0; i < wayPts.length - 1; i++) {
     const legCoords = coords.slice(wayPts[i], wayPts[i + 1] + 1)
     legs.push(legCoords)
