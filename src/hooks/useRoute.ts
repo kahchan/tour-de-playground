@@ -221,13 +221,19 @@ export function useRoute(
       pickStart(playgrounds, mode as 'north' | 'south' | 'location', startPos)
     const end = pinnedEnd?.id !== start.id ? pinnedEnd : undefined
 
-    // ── Visit order: Vroom first, cluster-first TSP as fallback ──────────────
+    // ── Visit order: Vroom (≤50 jobs) or cluster-first TSP ───────────────────
+    // ORS free tier rejects optimization payloads with >50 jobs (returns 413).
+    const jobCount = playgrounds.length - 1 - (end ? 1 : 0)
     let ids: string[]
-    try {
-      ids = await fetchVroomOrder(playgrounds, start, end, orsKey, controller.signal)
-    } catch (err) {
-      if ((err as Error).name === 'AbortError') return
-      console.warn('Vroom failed — falling back to cluster-first TSP:', err)
+    if (jobCount <= 50) {
+      try {
+        ids = await fetchVroomOrder(playgrounds, start, end, orsKey, controller.signal)
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return
+        console.warn('Vroom failed — falling back to cluster-first TSP:', err)
+        ids = clusterFirstRoute(playgrounds, start, end, euclidean).map((p) => p.id)
+      }
+    } else {
       ids = clusterFirstRoute(playgrounds, start, end, euclidean).map((p) => p.id)
     }
 
