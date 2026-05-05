@@ -11,7 +11,7 @@
   bottom: calc(1rem + env(safe-area-inset-bottom));
   left: 1rem;
   right: 1rem;
-  height: 65vh;
+  height: 350px;
   background: var(--color-surface);
   color: var(--color-text);
   border-radius: 20px;
@@ -730,6 +730,9 @@
 
 /* Route totals summary row */
 .routeTotalsRow {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 0.5em;
@@ -737,14 +740,6 @@
   background: var(--color-surface-2);
   border-bottom: 2px solid var(--color-border);
   flex-wrap: wrap;
-}
-
-@media (min-width: 640px) {
-  .routeTotalsRow {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-  }
 }
 
 .routeTotalsLabel {

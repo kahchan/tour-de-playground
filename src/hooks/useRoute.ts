@@ -30,7 +30,7 @@ function chunkOverlapping<T>(arr: T[], size: number): T[][] {
 
 interface ChunkResult {
   legs: [number, number, number][][]
-  legStats: { distance: number; elevationGain: number }[]
+  legStats: { distance: number; elevationGain: number; isMtb: boolean }[]
 }
 
 interface CacheEntry {
@@ -49,6 +49,7 @@ async function fetchChunk(
     body: JSON.stringify({
       coordinates: waypoints.map((p) => [p.lng, p.lat]),
       elevation: true,
+      extra_info: ['waytype'],
     }),
     signal,
   })
@@ -59,17 +60,19 @@ async function fetchChunk(
   const wayPts: number[] = feature.properties.way_points
   const segments: { distance: number; ascent?: number }[] =
     feature.properties.segments ?? []
+  const waytypeValues: [number, number, number][] =
+    feature.extras?.waytype?.values ?? []
   const legs: [number, number, number][][] = []
-  const legStats: { distance: number; elevationGain: number }[] = []
+  const legStats: { distance: number; elevationGain: number; isMtb: boolean }[] = []
   for (let i = 0; i < wayPts.length - 1; i++) {
     const legCoords = coords.slice(wayPts[i], wayPts[i + 1] + 1)
     legs.push(legCoords)
     const orsAscent = segments[i]?.ascent
     const orsDistance = segments[i]?.distance ?? 0
     // Wellington's highest point is ~420 m — no cycling leg can climb more.
-    // Reject ORS ascent if it implies >15% average gradient or >300 m total;
+    // Reject ORS ascent if it implies >15% average gradient or >220 m total;
     // both are signs of a corrupted SRTM tile (Freyberg, The Crescent, etc.).
-    const MAX_ELEV = 300
+    const MAX_ELEV = 220
     const orsAscentPlausible =
       orsAscent != null &&
       orsAscent <= Math.min(Math.max(orsDistance * 0.15, 50), MAX_ELEV)
@@ -84,7 +87,13 @@ async function fetchChunk(
       const endZ = legCoords[legCoords.length - 1][2]
       elevationGain = Math.min(Math.max(0, endZ - startZ), MAX_ELEV)
     }
-    legStats.push({ distance: orsDistance, elevationGain })
+    // Waytype 4 = path, 5 = track — both indicate off-road MTB terrain.
+    const legStart = wayPts[i]
+    const legEnd = wayPts[i + 1]
+    const isMtb = waytypeValues.some(
+      ([from, to, val]) => (val === 4 || val === 5) && from < legEnd && to > legStart,
+    )
+    legStats.push({ distance: orsDistance, elevationGain, isMtb })
   }
   return { legs, legStats }
 }
@@ -242,11 +251,11 @@ export function useRoute(
     Promise.all(chunks.map((chunk) => fetchChunk(chunk, orsKey, controller.signal)))
       .then((chunkResults) => {
         let legIndex = 0
-        const features = chunkResults.flatMap(({ legs }) =>
-          legs.map((legCoords) => ({
+        const features = chunkResults.flatMap(({ legs, legStats }) =>
+          legs.map((legCoords, i) => ({
             type: 'Feature' as const,
             geometry: { type: 'LineString' as const, coordinates: legCoords },
-            properties: { legIndex: legIndex++ },
+            properties: { legIndex: legIndex++, isMtb: legStats[i]?.isMtb ?? false },
           })),
         )
         const allLegStats = chunkResults.flatMap(({ legStats }) => legStats)

@@ -37,6 +37,7 @@ export default function App() {
     lng: number
     nextLat?: number
     nextLng?: number
+    legIndex?: number
     seq: number
   } | null>(null)
 
@@ -95,6 +96,7 @@ export default function App() {
       lng: playground.lng,
       nextLat: nextPg?.lat,
       nextLng: nextPg?.lng,
+      legIndex: routeIdx >= 0 ? routeIdx : undefined,
       seq: (prev?.seq ?? 0) + 1,
     }))
   }

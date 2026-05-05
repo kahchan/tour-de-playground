@@ -13,7 +13,7 @@ interface Props {
   routeGeoJSON: FeatureCollection<LineString> | null
   routeOrder: string[]
   selectedId: string | null
-  flyTarget: { lat: number; lng: number; nextLat?: number; nextLng?: number; seq: number } | null
+  flyTarget: { lat: number; lng: number; nextLat?: number; nextLng?: number; legIndex?: number; seq: number } | null
 }
 
 const WELLINGTON: [number, number] = [174.7762, -41.2865]
@@ -54,6 +54,7 @@ function addSourcesAndLayers(
   const checkedColor = darkMode ? '#00c8d7' : '#00818c'
   const uncheckedColor = darkMode ? '#9b20d0' : '#6510a0'
   const routeColor = darkMode ? '#00c8d7' : '#00818c'
+  const mtbColor = darkMode ? '#9b20d0' : '#6510a0'
 
   map.addSource('route', {
     type: 'geojson',
@@ -66,7 +67,7 @@ function addSourcesAndLayers(
     source: 'route',
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': routeColor,
+      'line-color': ['case', ['==', ['get', 'isMtb'], true], mtbColor, routeColor],
       'line-width': 3,
       'line-opacity': 0.5,
     },
@@ -315,14 +316,32 @@ export default function MapView({
 
     if (flyTarget.nextLat !== undefined && flyTarget.nextLng !== undefined) {
       const isDesktop = window.innerWidth >= 640
+      // Mobile bottom padding = sidebar height (350px) + 1rem margin (16px) + 20px buffer
       const padding = isDesktop
         ? { top: 80, bottom: 80, left: 80, right: 392 }
-        : { top: 60, bottom: Math.round(window.innerHeight * 0.65) + 20, left: 20, right: 20 }
+        : { top: 60, bottom: 386, left: 20, right: 20 }
+
+      let minLng = Math.min(flyTarget.lng, flyTarget.nextLng)
+      let maxLng = Math.max(flyTarget.lng, flyTarget.nextLng)
+      let minLat = Math.min(flyTarget.lat, flyTarget.nextLat)
+      let maxLat = Math.max(flyTarget.lat, flyTarget.nextLat)
+
+      if (flyTarget.legIndex !== undefined) {
+        const legFeature = routeGeoJSONRef.current?.features.find(
+          (f) => f.properties?.legIndex === flyTarget.legIndex,
+        )
+        if (legFeature) {
+          for (const [lng, lat] of legFeature.geometry.coordinates as [number, number][]) {
+            if (lng < minLng) minLng = lng
+            if (lng > maxLng) maxLng = lng
+            if (lat < minLat) minLat = lat
+            if (lat > maxLat) maxLat = lat
+          }
+        }
+      }
+
       map.fitBounds(
-        [
-          [Math.min(flyTarget.lng, flyTarget.nextLng), Math.min(flyTarget.lat, flyTarget.nextLat)],
-          [Math.max(flyTarget.lng, flyTarget.nextLng), Math.max(flyTarget.lat, flyTarget.nextLat)],
-        ],
+        [[minLng, minLat], [maxLng, maxLat]],
         { padding, maxZoom: 16, duration: 600 },
       )
     } else {
