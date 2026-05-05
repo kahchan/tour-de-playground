@@ -6,9 +6,9 @@ import { useDarkMode } from './hooks/useDarkMode'
 import { useRoute } from './hooks/useRoute'
 import MapView from './components/MapView'
 import Wordmark from './components/Wordmark'
-import NameBadge from './components/NameBadge'
 import NamePrompt from './components/NamePrompt'
 import Sidebar from './components/Sidebar'
+import ElevationProfile from './components/ElevationProfile'
 import ResetPanel from './components/ResetPanel'
 import styles from './App.module.css'
 
@@ -21,11 +21,12 @@ export default function App() {
   const { checkIns, addCheckIn, removeCheckIn, disabledIds, toggleDisabled, resetAll, error } =
     useCheckIns()
   const { name, setName } = useName()
-  const { dark, toggle: toggleDark } = useDarkMode()
+  const { mapTheme, dark, toggleDark, toggleSatellite, satellite } = useDarkMode()
   const [selected, setSelected] = useState<Playground | null>(null)
   const [showNamePrompt, setShowNamePrompt] = useState(false)
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showElevation, setShowElevation] = useState(false)
   const [pinnedEndId, setPinnedEndId] = useState<string | null>(null)
   const [pinnedStartId, setPinnedStartId] = useState<string | null>(null)
   const [sidebarHighlight, setSidebarHighlight] = useState<{
@@ -87,6 +88,10 @@ export default function App() {
   }
 
   function handleSidebarSelect(playground: Playground) {
+    if (selected?.id === playground.id) {
+      setSelected(null)
+      return
+    }
     setSelected(playground)
     const routeIdx = routeOrderedIds.indexOf(playground.id)
     const nextId = routeIdx >= 0 ? routeOrderedIds[routeIdx + 1] : undefined
@@ -141,7 +146,7 @@ export default function App() {
         playgrounds={visiblePlaygrounds}
         checkedIds={checkedIds}
         onMarkerClick={handleMarkerClick}
-        darkMode={dark}
+        mapTheme={mapTheme}
         routeGeoJSON={routeGeoJSON}
         routeOrder={routeOrderedIds}
         selectedId={selected?.id ?? null}
@@ -151,6 +156,7 @@ export default function App() {
         total={visiblePlaygrounds.length}
         visited={checkedIds.size}
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
+        onLogoClick={() => setShowNamePrompt(true)}
       />
       <Sidebar
         playgrounds={visiblePlaygrounds}
@@ -174,13 +180,22 @@ export default function App() {
         onTogglePinStart={handleTogglePinStart}
         dark={dark}
         onToggleDark={toggleDark}
+        satellite={satellite}
+        onToggleSatellite={toggleSatellite}
         routeMode={routeMode}
         routeFetchState={routeFetchState}
         onSetRouteMode={import.meta.env.VITE_ORS_KEY ? setRouteMode : undefined}
         routeLegs={routeLegs.length > 0 ? routeLegs : undefined}
       />
-      <NameBadge name={name} onChangeName={() => setShowNamePrompt(true)} />
-      {error && <div className={styles.errorBanner}>{error}</div>}
+      {routeGeoJSON && (
+        <ElevationProfile
+          geoJSON={routeGeoJSON}
+          visible={showElevation}
+          sidebarOpen={sidebarOpen}
+          onToggle={() => setShowElevation((v) => !v)}
+        />
+      )}
+      {error &&<div className={styles.errorBanner}>{error}</div>}
       {isResetMode && <ResetPanel onReset={handleReset} />}
       {showNamePrompt && (
         <NamePrompt
@@ -189,6 +204,7 @@ export default function App() {
             setShowNamePrompt(false)
             setPendingId(null)
           }}
+          initialName={name ?? ''}
         />
       )}
     </div>

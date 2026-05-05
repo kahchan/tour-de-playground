@@ -5,11 +5,13 @@ import type { FeatureCollection, LineString } from 'geojson'
 import type { Playground } from '../types'
 import styles from './MapView.module.css'
 
+import type { MapTheme } from '../hooks/useDarkMode'
+
 interface Props {
   playgrounds: Playground[]
   checkedIds: Set<string>
   onMarkerClick: (playground: Playground) => void
-  darkMode: boolean
+  mapTheme: MapTheme
   routeGeoJSON: FeatureCollection<LineString> | null
   routeOrder: string[]
   selectedId: string | null
@@ -18,10 +20,10 @@ interface Props {
 
 const WELLINGTON: [number, number] = [174.7762, -41.2865]
 
-function getStyleUrl(darkMode: boolean, key: string): string {
-  return darkMode
-    ? `https://api.maptiler.com/maps/streets-v2-dark/style.json?key=${key}`
-    : `https://api.maptiler.com/maps/outdoor-v2/style.json?key=${key}`
+function getStyleUrl(mapTheme: MapTheme, key: string): string {
+  if (mapTheme === 'satellite') return `https://api.maptiler.com/maps/hybrid/style.json?key=${key}`
+  if (mapTheme === 'dark') return `https://api.maptiler.com/maps/streets-v2-dark/style.json?key=${key}`
+  return `https://api.maptiler.com/maps/outdoor-v2/style.json?key=${key}`
 }
 
 function toGeoJSON(
@@ -49,12 +51,13 @@ function addSourcesAndLayers(
   map: maplibregl.Map,
   onClickRef: React.RefObject<(playground: Playground) => void>,
   playgroundsRef: React.RefObject<Playground[]>,
-  darkMode: boolean,
+  mapTheme: MapTheme,
 ) {
-  const checkedColor = darkMode ? '#00c8d7' : '#00818c'
-  const uncheckedColor = darkMode ? '#9b20d0' : '#6510a0'
-  const routeColor = darkMode ? '#00c8d7' : '#00818c'
-  const mtbColor = darkMode ? '#9b20d0' : '#6510a0'
+  const darkColors = mapTheme !== 'light'
+  const checkedColor = darkColors ? '#00c8d7' : '#00818c'
+  const uncheckedColor = darkColors ? '#9b20d0' : '#6510a0'
+  const routeColor = darkColors ? '#00c8d7' : '#00818c'
+  const mtbColor = darkColors ? '#9b20d0' : '#6510a0'
 
   map.addSource('route', {
     type: 'geojson',
@@ -213,7 +216,7 @@ export default function MapView({
   playgrounds,
   checkedIds,
   onMarkerClick,
-  darkMode,
+  mapTheme,
   routeGeoJSON,
   routeOrder,
   selectedId,
@@ -226,7 +229,7 @@ export default function MapView({
   const checkedIdsRef = useRef(checkedIds)
   const routeOrderRef = useRef(routeOrder)
   const routeGeoJSONRef = useRef(routeGeoJSON)
-  const darkModeRef = useRef(darkMode)
+  const mapThemeRef = useRef(mapTheme)
   const [mapLoaded, setMapLoaded] = useState(false)
   const mapReadyRef = useRef(false)
 
@@ -235,8 +238,8 @@ export default function MapView({
   useEffect(() => { checkedIdsRef.current = checkedIds }, [checkedIds])
   useEffect(() => { routeOrderRef.current = routeOrder }, [routeOrder])
   useEffect(() => { routeGeoJSONRef.current = routeGeoJSON }, [routeGeoJSON])
-  // Must be defined before the darkMode setStyle effect so the ref is current when style.load fires
-  useEffect(() => { darkModeRef.current = darkMode }, [darkMode])
+  // Must be defined before the theme setStyle effect so the ref is current when style.load fires
+  useEffect(() => { mapThemeRef.current = mapTheme }, [mapTheme])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -248,7 +251,7 @@ export default function MapView({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: getStyleUrl(darkMode, key),
+      style: getStyleUrl(mapTheme, key),
       center: WELLINGTON,
       zoom: 12,
     })
@@ -260,7 +263,7 @@ export default function MapView({
     // Guard on layers (not sources) because setStyle diff-mode keeps user sources but removes all layers.
     map.on('style.load', () => {
       if (!map.getLayer('route-line')) {
-        addSourcesAndLayers(map, onClickRef, playgroundsRef, darkModeRef.current)
+        addSourcesAndLayers(map, onClickRef, playgroundsRef, mapThemeRef.current)
       }
       ;(map.getSource('playgrounds') as maplibregl.GeoJSONSource)
         ?.setData(toGeoJSON(playgroundsRef.current, checkedIdsRef.current, routeOrderRef.current))
@@ -278,7 +281,7 @@ export default function MapView({
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Dark mode — swap the style; { diff: false } forces a clean wipe of all sources + layers
+  // Theme change — swap the style; { diff: false } forces a clean wipe of all sources + layers
   // so the style.load handler can safely re-add everything without source-already-exists errors.
   useEffect(() => {
     const map = mapRef.current
@@ -286,8 +289,8 @@ export default function MapView({
     if (!map || !key || !mapReadyRef.current) return
     mapReadyRef.current = false
     setMapLoaded(false)
-    map.setStyle(getStyleUrl(darkMode, key), { diff: false })
-  }, [darkMode]) // eslint-disable-line react-hooks/exhaustive-deps
+    map.setStyle(getStyleUrl(mapTheme, key), { diff: false })
+  }, [mapTheme]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return

@@ -666,6 +666,10 @@
   color: var(--color-text);
 }
 
+.themeBtnActive {
+  color: var(--color-checked);
+}
+
 /* Route order flat list */
 .routeList {
   list-style: none;
@@ -675,19 +679,11 @@
 
 .routeItem {
   display: flex;
-  align-items: center;
-  gap: 0.55em;
+  flex-direction: column;
   width: 100%;
-  padding: 0.55em 0.85em;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text);
   font-size: 1em;
-  min-height: 3em;
-  cursor: pointer;
-}
-
-.routeItem:hover {
-  background: var(--color-surface-2);
 }
 
 .routeItem:last-child {
@@ -696,6 +692,20 @@
 
 .routeItem.itemChecked {
   opacity: 0.45;
+}
+
+.routeItemRow {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  width: 100%;
+  padding: 0.55em 0.85em;
+  min-height: 3em;
+  cursor: pointer;
+}
+
+.routeItemRow:hover {
+  background: var(--color-surface-2);
 }
 
 .routePos {
@@ -726,6 +736,10 @@
   color: var(--color-teal);
   font-variant-numeric: tabular-nums;
   opacity: 0.85;
+}
+
+.cumElev {
+  opacity: 0.5;
 }
 
 /* Route totals summary row */
@@ -765,4 +779,55 @@
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
+}
+
+/* Step-by-step turn instructions for selected leg */
+.stepList {
+  list-style: none;
+  margin: 0;
+  padding: 0.3em 0.85em 0.55em 2.85em;
+  border-top: 1px solid var(--color-border);
+}
+
+.stepItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4em;
+  padding: 0.14em 0;
+  font-size: 0.65em;
+  line-height: 1.45;
+}
+
+.stepIcon {
+  flex-shrink: 0;
+  width: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-muted);
+  padding-top: 0.1em;
+}
+
+.stepIconArrive {
+  color: var(--color-checked);
+}
+
+.stepDist {
+  flex-shrink: 0;
+  width: 3rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+}
+
+.stepText {
+  flex: 1;
+  color: var(--color-text);
+  opacity: 0.8;
+}
+
+.stepTextArrive {
+  color: var(--color-checked);
+  opacity: 1;
+  font-weight: 600;
 }

@@ -1,6 +1,13 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import {
+  Sun, Moon, GlobeHemisphereWest, X, Check,
+  CaretRight, ArrowDown, ArrowUp, Crosshair,
+  ArrowsClockwise, NavigationArrow, Flag,
+  ArrowBendDownLeft, ArrowBendDownRight, ArrowUDownLeft,
+} from '@phosphor-icons/react'
+
 import type { CheckIn, Playground } from '../types'
-import type { RouteMode, LegStat } from '../hooks/useRoute'
+import type { RouteMode, LegStat, RouteStep } from '../hooks/useRoute'
 import styles from './Sidebar.module.css'
 
 interface Props {
@@ -25,6 +32,8 @@ interface Props {
   onTogglePinStart: (id: string) => void
   dark: boolean
   onToggleDark: () => void
+  satellite: boolean
+  onToggleSatellite: () => void
   routeMode?: RouteMode
   routeFetchState?: 'idle' | 'loading' | 'ready' | 'error'
   onSetRouteMode?: (mode: RouteMode) => void
@@ -44,6 +53,25 @@ function fmtKm(m: number) {
 
 function fmtElev(m: number) {
   return Math.round(m) + ' m↑'
+}
+
+function fmtDist(m: number): string {
+  if (m < 950) return Math.round(m / 5) * 5 + ' m'
+  return (m / 1000).toFixed(1) + ' km'
+}
+
+function stepIcon(step: RouteStep) {
+  const p = { size: 13 } as const
+  switch (step.type) {
+    case 0: case 2: case 4: case 12: return <ArrowBendDownLeft {...p} />
+    case 1: case 3: case 5: case 13: return <ArrowBendDownRight {...p} />
+    case 6: return <ArrowUp {...p} />
+    case 7: case 8: return <ArrowsClockwise {...p} />
+    case 9: return <ArrowUDownLeft {...p} />
+    case 10: return <Flag {...p} weight="fill" />
+    case 11: return <NavigationArrow {...p} weight="fill" />
+    default: return <ArrowUp {...p} />
+  }
 }
 
 export default function Sidebar({
@@ -68,6 +96,8 @@ export default function Sidebar({
   onTogglePinStart,
   dark,
   onToggleDark,
+  satellite,
+  onToggleSatellite,
   routeMode = 'off',
   routeFetchState = 'idle',
   onSetRouteMode,
@@ -125,6 +155,16 @@ export default function Sidebar({
     if (!routeLegs) return new Map<string, LegStat>()
     return new Map(routeLegs.map((l) => [l.id, l]))
   }, [routeLegs])
+
+  // Running cumulative elevation — lets you verify the total by reading the last row
+  const routeItemsWithCumulative = useMemo(() => {
+    let cumElev = 0
+    return routeItems.map((item) => {
+      const stat = routeLegMap.get(item.playground.id)
+      cumElev += stat?.elevationGain ?? 0
+      return { ...item, cumElev }
+    })
+  }, [routeItems, routeLegMap])
 
   const { totalDistance, totalElevation, remainingCount } = useMemo(() => {
     if (!routeLegs || routeLegs.length === 0) return { totalDistance: 0, totalElevation: 0, remainingCount: 0 }
@@ -206,6 +246,9 @@ export default function Sidebar({
   const routeOn = routeMode !== 'off'
   const isCustomRoute = !!(pinnedStartId && pinnedEndId)
 
+  const ThemeIcon = dark ? Moon : Sun
+  const themeLabel = dark ? 'Switch to light mode' : 'Switch to dark mode'
+
   return (
     <>
       {isOpen && <div className={styles.backdrop} onClick={onClose} />}
@@ -222,16 +265,23 @@ export default function Sidebar({
               <button
                 className={styles.themeBtn}
                 onClick={onToggleDark}
-                aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={themeLabel}
               >
-                {dark ? '☀︎' : '☾'}
+                <ThemeIcon size={18} weight="fill" />
+              </button>
+              <button
+                className={`${styles.themeBtn} ${satellite ? styles.themeBtnActive : ''}`}
+                onClick={onToggleSatellite}
+                aria-label={satellite ? 'Switch to map view' : 'Switch to satellite view'}
+              >
+                <GlobeHemisphereWest size={18} weight={satellite ? 'fill' : 'regular'} />
               </button>
               <button
                 className={styles.closeBtn}
                 onClick={onClose}
                 aria-label="Close sidebar"
               >
-                ×
+                <X size={18} weight="bold" />
               </button>
             </div>
           </div>
@@ -255,7 +305,7 @@ export default function Sidebar({
                   onClick={() => onSetRouteMode(routeOn ? 'off' : 'north')}
                   title={isRouteError ? 'Route unavailable' : routeOn ? 'Turn route off' : 'Turn route on'}
                 >
-                  {isRouteLoading ? <span className={styles.spin}>⟳</span> : null}
+                  {isRouteLoading ? <ArrowsClockwise size={14} className={styles.spin} /> : null}
                   Route
                 </button>
                 {routeOn && (
@@ -267,17 +317,17 @@ export default function Sidebar({
                         className={`${styles.routeDirectionBtn} ${routeMode === 'north' ? styles.routeDirectionBtnActive : ''}`}
                         onClick={() => onSetRouteMode('north')}
                         title="Start from northernmost"
-                      >↓N</button>
+                      ><ArrowDown size={14} /></button>
                       <button
                         className={`${styles.routeDirectionBtn} ${routeMode === 'south' ? styles.routeDirectionBtnActive : ''}`}
                         onClick={() => onSetRouteMode('south')}
                         title="Start from southernmost"
-                      >↑S</button>
+                      ><ArrowUp size={14} /></button>
                       <button
                         className={`${styles.routeDirectionBtn} ${routeMode === 'location' ? styles.routeDirectionBtnActive : ''}`}
                         onClick={() => onSetRouteMode('location')}
                         title="Start from your location"
-                      >⊙</button>
+                      ><Crosshair size={14} /></button>
                     </span>
                   )
                 )}
@@ -348,10 +398,12 @@ export default function Sidebar({
                   </span>
                 </li>
               )}
-              {routeItems.map(({ pos, playground: p, legIdx }) => {
+              {routeItemsWithCumulative.map(({ pos, playground: p, legIdx, cumElev }) => {
                 const checked = checkedIds.has(p.id)
                 const legStat = routeLegMap.get(p.id)
                 const hasStats = legStat !== undefined && (legIdx > 0 || legStat.distance > 0)
+                const isSelected = selectedId === p.id
+                const steps = legStat?.steps ?? []
                 return (
                   <li
                     key={p.id}
@@ -361,53 +413,72 @@ export default function Sidebar({
                     }}
                   >
                     <div
-                      className={`${styles.routeItem} ${checked ? styles.itemChecked : ''} ${selectedId === p.id ? styles.itemSelected : ''}`}
-                      onClick={() => onSelectPlayground(p)}
+                      className={`${styles.routeItem} ${checked ? styles.itemChecked : ''} ${isSelected ? styles.itemSelected : ''}`}
                     >
-                      <span className={styles.routePos}>{pos}</span>
-                      <span className={styles.routeItemText}>
-                        <span className={styles.itemName}>{p.name}</span>
-                        {p.suburb && <span className={styles.itemSuburb}>{p.suburb}</span>}
-                        {hasStats && (
-                          <span className={styles.legStats}>
-                            {fmtKm(legStat!.distance)} · +{fmtElev(legStat!.elevationGain)}
-                          </span>
+                      <div className={styles.routeItemRow} onClick={() => onSelectPlayground(p)}>
+                        <span className={styles.routePos}>{pos}</span>
+                        <span className={styles.routeItemText}>
+                          <span className={styles.itemName}>{p.name}</span>
+                          {p.suburb && <span className={styles.itemSuburb}>{p.suburb}</span>}
+                          {hasStats && (
+                            <span className={styles.legStats}>
+                              {fmtKm(legStat!.distance)} · +{fmtElev(legStat!.elevationGain)}
+                              <span className={styles.cumElev}> / {fmtElev(cumElev)}</span>
+                            </span>
+                          )}
+                        </span>
+                        {isSelected && (
+                          checked ? (
+                            <button
+                              className={styles.inlineUndoBtn}
+                              onClick={(e) => { e.stopPropagation(); onUndo(p.id) }}
+                            >
+                              Undo
+                            </button>
+                          ) : (
+                            <button
+                              className={styles.inlineDoneBtn}
+                              onClick={(e) => { e.stopPropagation(); onCheckOff(p.id) }}
+                            >
+                              <Check size={13} weight="bold" /> Done
+                            </button>
+                          )
                         )}
-                      </span>
-                      {selectedId === p.id && (
-                        checked ? (
-                          <button
-                            className={styles.inlineUndoBtn}
-                            onClick={(e) => { e.stopPropagation(); onUndo(p.id) }}
-                          >
-                            Undo
-                          </button>
-                        ) : (
-                          <button
-                            className={styles.inlineDoneBtn}
-                            onClick={(e) => { e.stopPropagation(); onCheckOff(p.id) }}
-                          >
-                            ✓ Done
-                          </button>
-                        )
-                      )}
-                      {!checked && (
-                        <>
-                          <button
-                            className={`${styles.pinStartBtn} ${pinnedStartId === p.id ? styles.pinStartBtnActive : ''}`}
-                            onClick={(e) => { e.stopPropagation(); onTogglePinStart(p.id) }}
-                            title={pinnedStartId === p.id ? 'Clear start point' : 'Set as route start'}
-                          >
-                            ⊣
-                          </button>
-                          <button
-                            className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
-                            onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
-                            title={pinnedEndId === p.id ? 'Clear end point' : 'Set as route end'}
-                          >
-                            ⊢
-                          </button>
-                        </>
+                        {!checked && (
+                          <>
+                            <button
+                              className={`${styles.pinStartBtn} ${pinnedStartId === p.id ? styles.pinStartBtnActive : ''}`}
+                              onClick={(e) => { e.stopPropagation(); onTogglePinStart(p.id) }}
+                              title={pinnedStartId === p.id ? 'Clear start point' : 'Set as route start'}
+                            >
+                              <NavigationArrow size={14} weight={pinnedStartId === p.id ? 'fill' : 'regular'} />
+                            </button>
+                            <button
+                              className={`${styles.pinEndBtn} ${pinnedEndId === p.id ? styles.pinEndBtnActive : ''}`}
+                              onClick={(e) => { e.stopPropagation(); onTogglePinEnd(p.id) }}
+                              title={pinnedEndId === p.id ? 'Clear end point' : 'Set as route end'}
+                            >
+                              <Flag size={14} weight={pinnedEndId === p.id ? 'fill' : 'regular'} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                      {isSelected && steps.length > 0 && (
+                        <ul className={styles.stepList}>
+                          {steps.map((step, i) => (
+                            <li key={i} className={styles.stepItem}>
+                              <span className={`${styles.stepIcon} ${step.type === 10 ? styles.stepIconArrive : ''}`}>
+                                {stepIcon(step)}
+                              </span>
+                              {step.type !== 10 && (
+                                <span className={styles.stepDist}>{fmtDist(step.distance)}</span>
+                              )}
+                              <span className={`${styles.stepText} ${step.type === 10 ? styles.stepTextArrive : ''}`}>
+                                {step.instruction}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
                       )}
                     </div>
                   </li>
@@ -428,11 +499,11 @@ export default function Sidebar({
                     className={styles.suburbHeader}
                     onClick={() => toggleSuburb(suburb)}
                   >
-                    <span
+                    <CaretRight
+                      size={14}
+                      weight="bold"
                       className={`${styles.chevron} ${isExpanded ? styles.chevronOpen : ''}`}
-                    >
-                      ›
-                    </span>
+                    />
                     <span className={styles.suburbName}>{suburb}</span>
                     <span className={styles.suburbCount}>
                       {checkedCount}/{pgs.length}
@@ -470,7 +541,7 @@ export default function Sidebar({
                                 <span
                                   className={`${styles.dot} ${checked ? styles.dotChecked : ''}`}
                                 >
-                                  {checked ? '✓' : ''}
+                                  {checked ? <Check size={11} weight="bold" /> : ''}
                                 </span>
                                 <span className={styles.itemName}>{p.name}</span>
                                 {isAdmin && disabled && (
@@ -497,7 +568,7 @@ export default function Sidebar({
                                     className={styles.inlineDoneBtn}
                                     onClick={(e) => { e.stopPropagation(); onCheckOff(p.id) }}
                                   >
-                                    ✓ Done
+                                    <Check size={13} weight="bold" /> Done
                                   </button>
                                 )
                               )}

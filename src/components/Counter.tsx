@@ -1,3 +1,4 @@
+import { List } from '@phosphor-icons/react'
 import styles from './Counter.module.css'
 
 interface Props {
@@ -13,7 +14,7 @@ export default function Counter({ total, visited, onToggle }: Props) {
       onClick={onToggle}
       aria-label="Toggle playground list"
     >
-      <span className={styles.icon}>≡</span>
+      <List size={18} weight="bold" />
       <span className={styles.count}>{visited}/{total}</span>
     </button>
   )

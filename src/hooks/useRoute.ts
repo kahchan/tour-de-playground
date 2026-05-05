@@ -6,10 +6,18 @@ import { clusterFirstRoute, euclidean, pickStart, type Point } from '../lib/tsp'
 export type RouteMode = 'off' | 'north' | 'south' | 'location'
 type FetchState = 'idle' | 'loading' | 'ready' | 'error'
 
+export interface RouteStep {
+  distance: number
+  instruction: string
+  name: string | null
+  type: number
+}
+
 export interface LegStat {
   id: string
   distance: number
   elevationGain: number
+  steps: RouteStep[]
 }
 
 const MODE_CYCLE: RouteMode[] = ['off', 'north', 'south', 'location']
@@ -30,7 +38,7 @@ function chunkOverlapping<T>(arr: T[], size: number): T[][] {
 
 interface ChunkResult {
   legs: [number, number, number][][]
-  legStats: { distance: number; elevationGain: number; isMtb: boolean }[]
+  legStats: { distance: number; elevationGain: number; isMtb: boolean; steps: RouteStep[] }[]
 }
 
 interface CacheEntry {
@@ -69,10 +77,10 @@ async function fetchChunk(
     legs.push(legCoords)
     const orsAscent = segments[i]?.ascent
     const orsDistance = segments[i]?.distance ?? 0
-    // Wellington's highest point is ~420 m — no cycling leg can climb more.
-    // Reject ORS ascent if it implies >15% average gradient or >220 m total;
-    // both are signs of a corrupted SRTM tile (Freyberg, The Crescent, etc.).
-    const MAX_ELEV = 220
+    // Reject ORS ascent if it implies >15% average gradient — sign of a
+    // corrupted SRTM tile (Freyberg, The Crescent, etc.). Cap at 300 m since
+    // Wellington's highest ridgeline legs can genuinely approach that.
+    const MAX_ELEV = 300
     const orsAscentPlausible =
       orsAscent != null &&
       orsAscent <= Math.min(Math.max(orsDistance * 0.15, 50), MAX_ELEV)
@@ -80,12 +88,15 @@ async function fetchChunk(
     if (orsAscentPlausible) {
       elevationGain = orsAscent
     } else {
-      // Fall back to net elevation gain (endpoint Z-values only).
-      // Two data points cannot accumulate DEM noise; cap at MAX_ELEV as a
-      // final guard against tiles where even the endpoint Z is corrupted.
-      const startZ = legCoords[0][2]
-      const endZ = legCoords[legCoords.length - 1][2]
-      elevationGain = Math.min(Math.max(0, endZ - startZ), MAX_ELEV)
+      // Fall back to summing positive Z-deltas from the full coordinate array.
+      // Ignore increments < 2 m to suppress DEM noise; cap at MAX_ELEV as a
+      // final guard against tiles where the entire Z series is corrupt.
+      let coordGain = 0
+      for (let j = 1; j < legCoords.length; j++) {
+        const dz = legCoords[j][2] - legCoords[j - 1][2]
+        if (dz > 2) coordGain += dz
+      }
+      elevationGain = Math.min(coordGain, MAX_ELEV)
     }
     // Waytype 4 = path, 5 = track — both indicate off-road MTB terrain.
     const legStart = wayPts[i]
@@ -93,7 +104,15 @@ async function fetchChunk(
     const isMtb = waytypeValues.some(
       ([from, to, val]) => (val === 4 || val === 5) && from < legEnd && to > legStart,
     )
-    legStats.push({ distance: orsDistance, elevationGain, isMtb })
+    const rawSteps: { distance: number; instruction: string; name: string; type: number }[] =
+      segments[i]?.steps ?? []
+    const steps: RouteStep[] = rawSteps.map((s) => ({
+      distance: s.distance,
+      instruction: s.instruction,
+      name: s.name === '-' ? null : (s.name || null),
+      type: s.type,
+    }))
+    legStats.push({ distance: orsDistance, elevationGain, isMtb, steps })
   }
   return { legs, legStats }
 }
@@ -267,7 +286,7 @@ export function useRoute(
         const allLegStats = chunkResults.flatMap(({ legStats }) => legStats)
         const newRouteLegs: LegStat[] = ids.map((id, i) =>
           i === 0
-            ? { id, distance: 0, elevationGain: 0 }
+            ? { id, distance: 0, elevationGain: 0, steps: [] }
             : { id, ...allLegStats[i - 1] },
         )
         const result: FeatureCollection<LineString> = { type: 'FeatureCollection', features }

@@ -1,3 +1,4 @@
+import { X, Check } from '@phosphor-icons/react'
 import type { CheckIn, Playground } from '../types'
 import styles from './MarkerPopup.module.css'
 
@@ -22,12 +23,12 @@ export default function MarkerPopup({
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
-          ×
+          <X size={18} weight="bold" />
         </button>
         <div className={styles.name}>{playground.name}</div>
         {checkIn ? (
           <>
-            <div className={styles.checked}>✓ Visited by {checkIn.name}</div>
+            <div className={styles.checked}><Check size={14} weight="bold" /> Visited by {checkIn.name}</div>
             <button className={styles.undoBtn} onClick={onUndo}>
               Undo
             </button>

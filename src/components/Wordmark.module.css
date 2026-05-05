@@ -12,6 +12,16 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.wordmarkStack:active .tourDe,
+.wordmarkStack:active .playground {
+  opacity: 0.8;
 }
 
 .tourDe {

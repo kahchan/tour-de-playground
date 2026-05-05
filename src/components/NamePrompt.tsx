@@ -4,10 +4,11 @@ import styles from './NamePrompt.module.css'
 interface Props {
   onSubmit: (name: string) => void
   onClose: () => void
+  initialName?: string
 }
 
-export default function NamePrompt({ onSubmit, onClose }: Props) {
-  const [value, setValue] = useState('')
+export default function NamePrompt({ onSubmit, onClose, initialName }: Props) {
+  const [value, setValue] = useState(initialName ?? '')
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
