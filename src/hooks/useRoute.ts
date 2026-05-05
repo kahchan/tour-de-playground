@@ -66,24 +66,23 @@ async function fetchChunk(
     legs.push(legCoords)
     const orsAscent = segments[i]?.ascent
     const orsDistance = segments[i]?.distance ?? 0
-    // ORS ascent is pre-smoothed and usually reliable. Reject if it implies an
-    // average gradient > 30% — physically impossible for a cycling leg and a
-    // sign of a bad SRTM tile. Allow a 50 m floor so short legs aren't
-    // over-penalised.
+    // Wellington's highest point is ~420 m — no cycling leg can climb more.
+    // Reject ORS ascent if it implies >15% average gradient or >300 m total;
+    // both are signs of a corrupted SRTM tile (Freyberg, The Crescent, etc.).
+    const MAX_ELEV = 300
     const orsAscentPlausible =
-      orsAscent != null && orsAscent <= Math.max(orsDistance * 0.3, 50)
+      orsAscent != null &&
+      orsAscent <= Math.min(Math.max(orsDistance * 0.15, 50), MAX_ELEV)
     let elevationGain: number
     if (orsAscentPlausible) {
       elevationGain = orsAscent
     } else {
-      // Subsample to ~30 points to suppress DEM noise and skip localised
-      // SRTM spikes without summing every dense routing coordinate.
-      const step = Math.max(1, Math.floor(legCoords.length / 30))
-      elevationGain = 0
-      for (let k = step; k < legCoords.length; k += step) {
-        const dz = legCoords[k][2] - legCoords[k - step][2]
-        if (dz > 0) elevationGain += dz
-      }
+      // Fall back to net elevation gain (endpoint Z-values only).
+      // Two data points cannot accumulate DEM noise; cap at MAX_ELEV as a
+      // final guard against tiles where even the endpoint Z is corrupted.
+      const startZ = legCoords[0][2]
+      const endZ = legCoords[legCoords.length - 1][2]
+      elevationGain = Math.min(Math.max(0, endZ - startZ), MAX_ELEV)
     }
     legStats.push({ distance: orsDistance, elevationGain })
   }
