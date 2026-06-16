@@ -19,10 +19,6 @@
   font-family: inherit;
 }
 
-.wordmarkStack:active .tourDe,
-.wordmarkStack:active .playground {
-  opacity: 0.8;
-}
 
 .tourDe {
   background: var(--color-teal);
@@ -32,7 +28,6 @@
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.01em;
-  transform: rotate(-2deg);
   position: relative;
   z-index: 1;
   white-space: nowrap;
@@ -46,7 +41,6 @@
   font-size: 0.875rem;
   font-weight: 900;
   letter-spacing: -0.02em;
-  transform: rotate(1.5deg);
   margin-top: -5px;
   position: relative;
   z-index: 2;
@@ -66,14 +60,20 @@
   gap: 0.3rem;
   cursor: pointer;
   color: var(--color-text);
-  transition: opacity 0.15s;
+  transition: opacity 0.15s, transform 0.12s;
   white-space: nowrap;
   font-family: inherit;
   flex-shrink: 0;
 }
 
 .iconBtn:active {
-  opacity: 0.7;
+  transform: perspective(400px) rotateX(4deg) scale(0.97);
+}
+
+.iconBtn[data-active] {
+  background: var(--color-teal);
+  color: var(--color-bg);
+  border-color: var(--color-teal);
 }
 
 .listIcon {

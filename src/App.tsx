@@ -4,12 +4,14 @@ import { useCheckIns } from './hooks/useCheckIns'
 import { useName } from './hooks/useName'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useRoute } from './hooks/useRoute'
+import { useCurationState } from './hooks/useCurationState'
 import MapView from './components/MapView'
 import Wordmark from './components/Wordmark'
 import NamePrompt from './components/NamePrompt'
 import Sidebar from './components/Sidebar'
 import ElevationProfile from './components/ElevationProfile'
 import ResetPanel from './components/ResetPanel'
+import CurationQueue from './components/CurationQueue'
 import styles from './App.module.css'
 
 const params = new URLSearchParams(window.location.search)
@@ -41,6 +43,11 @@ export default function App() {
     legIndex?: number
     seq: number
   } | null>(null)
+  const [curationOpen, setCurationOpen] = useState(false)
+  const [showLocation, setShowLocation] = useState(false)
+  const [panDelta, setPanDelta] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [mapMoving, setMapMoving] = useState(false)
+  const curation = useCurationState(disabledIds)
 
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}playgrounds.json`)
@@ -129,6 +136,11 @@ export default function App() {
     setPinnedStartId((prev) => (prev === id ? null : id))
   }
 
+  function handlePanChange(delta: { x: number; y: number }, moving: boolean) {
+    setPanDelta(delta)
+    setMapMoving(moving)
+  }
+
   async function handleReset(passphrase: string) {
     if (!import.meta.env.VITE_WORKER_URL)
       throw new Error('No worker URL configured')
@@ -151,12 +163,18 @@ export default function App() {
         routeOrder={routeOrderedIds}
         selectedId={selected?.id ?? null}
         flyTarget={mapFlyTarget}
+        onPanChange={handlePanChange}
+        showLocation={showLocation}
       />
       <Wordmark
         total={visiblePlaygrounds.length}
         visited={checkedIds.size}
         onToggleSidebar={() => setSidebarOpen((o) => !o)}
         onLogoClick={() => setShowNamePrompt(true)}
+        panDelta={panDelta}
+        mapMoving={mapMoving}
+        showLocation={showLocation}
+        onToggleLocation={() => setShowLocation((o) => !o)}
       />
       <Sidebar
         playgrounds={visiblePlaygrounds}
@@ -172,6 +190,7 @@ export default function App() {
         disabledIds={disabledIds}
         onToggleDisabled={toggleDisabled}
         onAdminReset={resetAll}
+        onOpenCurate={() => setCurationOpen(true)}
         highlight={sidebarHighlight}
         routeOrder={routeOrderedIds.length > 0 ? routeOrderedIds : undefined}
         pinnedEndId={pinnedEndId}
@@ -193,6 +212,27 @@ export default function App() {
           visible={showElevation}
           sidebarOpen={sidebarOpen}
           onToggle={() => setShowElevation((v) => !v)}
+        />
+      )}
+      {isAdmin && curationOpen && (
+        <CurationQueue
+          playgrounds={playgrounds}
+          disabledIds={disabledIds}
+          reviewed={curation.reviewed}
+          skipped={curation.skipped}
+          getStatus={curation.getStatus}
+          markReviewed={curation.markReviewed}
+          markSkipped={curation.markSkipped}
+          clearStatus={curation.clearStatus}
+          onToggleDisabled={toggleDisabled}
+          onFlyTo={(p) =>
+            setMapFlyTarget((prev) => ({
+              lat: p.lat,
+              lng: p.lng,
+              seq: (prev?.seq ?? 0) + 1,
+            }))
+          }
+          onClose={() => setCurationOpen(false)}
         />
       )}
       {error &&<div className={styles.errorBanner}>{error}</div>}

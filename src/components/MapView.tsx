@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { FeatureCollection, LineString } from 'geojson'
@@ -16,6 +16,8 @@ interface Props {
   routeOrder: string[]
   selectedId: string | null
   flyTarget: { lat: number; lng: number; nextLat?: number; nextLng?: number; legIndex?: number; seq: number } | null
+  onPanChange?: (delta: { x: number; y: number }, moving: boolean) => void
+  showLocation: boolean
 }
 
 const WELLINGTON: [number, number] = [174.7762, -41.2865]
@@ -70,7 +72,7 @@ function addSourcesAndLayers(
     source: 'route',
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': ['case', ['==', ['get', 'isMtb'], true], mtbColor, routeColor],
+      'line-color': ['case', ['==', ['get', 'isTrail'], true], mtbColor, routeColor],
       'line-width': 3,
       'line-opacity': 0.5,
     },
@@ -181,6 +183,37 @@ function addSourcesAndLayers(
     paint: { 'text-color': '#fff' },
   })
 
+  map.addSource('user-location', {
+    type: 'geojson',
+    data: { type: 'FeatureCollection', features: [] },
+  })
+
+  map.addLayer({
+    id: 'user-location-accuracy',
+    type: 'circle',
+    source: 'user-location',
+    paint: {
+      'circle-radius': ['coalesce', ['get', 'accuracyPx'], 0],
+      'circle-color': '#2c7ef7',
+      'circle-opacity': 0.12,
+      'circle-stroke-width': 1,
+      'circle-stroke-color': '#2c7ef7',
+      'circle-stroke-opacity': 0.25,
+    },
+  })
+
+  map.addLayer({
+    id: 'user-location-dot',
+    type: 'circle',
+    source: 'user-location',
+    paint: {
+      'circle-radius': 8,
+      'circle-color': '#2c7ef7',
+      'circle-stroke-width': 2.5,
+      'circle-stroke-color': '#fff',
+    },
+  })
+
   for (const layer of ['clusters', 'unchecked', 'checked', 'checked-tick', 'route-number']) {
     map.on('mouseenter', layer, () => {
       map.getCanvas().style.cursor = 'pointer'
@@ -221,6 +254,8 @@ export default function MapView({
   routeOrder,
   selectedId,
   flyTarget,
+  onPanChange,
+  showLocation,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -230,10 +265,15 @@ export default function MapView({
   const routeOrderRef = useRef(routeOrder)
   const routeGeoJSONRef = useRef(routeGeoJSON)
   const mapThemeRef = useRef(mapTheme)
+  const onPanChangeRef = useRef(onPanChange)
   const [mapLoaded, setMapLoaded] = useState(false)
   const mapReadyRef = useRef(false)
+  const [dropPos, setDropPos] = useState<{ x: number; y: number; key: number } | null>(null)
+  const dropTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
 
   useEffect(() => { onClickRef.current = onMarkerClick }, [onMarkerClick])
+  useEffect(() => { onPanChangeRef.current = onPanChange }, [onPanChange])
   useEffect(() => { playgroundsRef.current = playgrounds }, [playgrounds])
   useEffect(() => { checkedIdsRef.current = checkedIds }, [checkedIds])
   useEffect(() => { routeOrderRef.current = routeOrder }, [routeOrder])
@@ -271,6 +311,28 @@ export default function MapView({
         ?.setData(routeGeoJSONRef.current ?? { type: 'FeatureCollection', features: [] })
       mapReadyRef.current = true
       setMapLoaded(true)
+    })
+
+    let startLngLat: maplibregl.LngLat | null = null
+    const clamp = (v: number, max: number) => Math.max(-max, Math.min(max, v))
+
+    map.on('movestart', () => {
+      startLngLat = map.getCenter()
+    })
+    map.on('move', () => {
+      if (!startLngLat) return
+      const container = map.getContainer()
+      const cx = container.clientWidth / 2
+      const cy = container.clientHeight / 2
+      const sp = map.project(startLngLat)
+      onPanChangeRef.current?.(
+        { x: clamp(sp.x - cx, 80), y: clamp(sp.y - cy, 60) },
+        true,
+      )
+    })
+    map.on('moveend', () => {
+      startLngLat = null
+      onPanChangeRef.current?.({ x: 0, y: 0 }, false)
     })
 
     return () => {
@@ -356,6 +418,23 @@ export default function MapView({
     }
   }, [flyTarget?.seq, mapLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Pin-drop bounce animation when a marker is clicked on the map.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapLoaded) return
+    const layers = ['unchecked', 'checked', 'checked-tick', 'route-number']
+    const handler = (e: maplibregl.MapLayerMouseEvent) => {
+      if (dropTimerRef.current) clearTimeout(dropTimerRef.current)
+      setDropPos({ x: e.point.x, y: e.point.y, key: Date.now() })
+      dropTimerRef.current = setTimeout(() => setDropPos(null), 900)
+    }
+    for (const layer of layers) map.on('click', layer, handler)
+    return () => {
+      for (const layer of layers) map.off('click', layer, handler)
+      if (dropTimerRef.current) clearTimeout(dropTimerRef.current)
+    }
+  }, [mapLoaded])
+
   // Drive per-leg opacity: highlight the leg starting at the selected playground.
   useEffect(() => {
     if (!mapLoaded || !mapRef.current) return
@@ -376,5 +455,84 @@ export default function MapView({
     }
   }, [selectedId, routeOrder, mapLoaded])
 
-  return <div ref={containerRef} className={styles.map} />
+  useEffect(() => {
+    const source = () =>
+      mapRef.current?.getSource('user-location') as maplibregl.GeoJSONSource | undefined
+
+    if (!mapLoaded) return
+
+    if (!showLocation) {
+      source()?.setData({ type: 'FeatureCollection', features: [] })
+      return
+    }
+
+    if (!navigator.geolocation) return
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const map = mapRef.current
+        if (!map) return
+        // Convert accuracy (metres) to approximate pixels at current zoom/lat
+        const metersPerPx =
+          (156543.03392 * Math.cos((pos.coords.latitude * Math.PI) / 180)) /
+          Math.pow(2, map.getZoom())
+        const accuracyPx = pos.coords.accuracy / metersPerPx
+        source()?.setData({
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: [pos.coords.longitude, pos.coords.latitude],
+              },
+              properties: { accuracyPx },
+            },
+          ],
+        })
+      },
+      () => {
+        // permission denied or unavailable — clear the dot
+        source()?.setData({ type: 'FeatureCollection', features: [] })
+      },
+      { enableHighAccuracy: true },
+    )
+
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [showLocation, mapLoaded])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setCursorPos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+  }, [])
+
+  const handleMouseLeave = useCallback(() => setCursorPos(null), [])
+
+  return (
+    <div
+      className={styles.mapWrapper}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      <div ref={containerRef} className={styles.map} />
+      {cursorPos && (
+        <div
+          className={styles.cursorHint}
+          style={{ left: cursorPos.x + 18, top: cursorPos.y - 14 }}
+        >
+          Click a playground
+        </div>
+      )}
+      {dropPos && (
+        <div
+          key={dropPos.key}
+          className={styles.dropAnim}
+          style={{ left: dropPos.x, top: dropPos.y }}
+        >
+          <div className={styles.dropDot} />
+          <div className={styles.dropRing} />
+        </div>
+      )}
+    </div>
+  )
 }
