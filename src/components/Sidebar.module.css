@@ -19,14 +19,15 @@
   z-index: 25;
   display: flex;
   flex-direction: column;
-  transform: translateY(calc(100% + 1.5rem));
-  transition: transform 0.28s ease;
+  transform-origin: center bottom;
+  transform: perspective(800px) translateY(calc(100% + 1.5rem)) rotateX(6deg);
+  transition: transform 0.3s ease;
   font-size: 1.25rem;
   font-family: inherit;
 }
 
 .sidebar.open {
-  transform: translateY(0);
+  transform: perspective(800px) translateY(0) rotateX(0deg);
 }
 
 /* Desktop: floating right card */
@@ -43,12 +44,13 @@
     width: 360px;
     height: auto;
     border-radius: 20px;
-    transform: translateX(calc(360px + 32px));
+    transform-origin: right center;
+    transform: perspective(800px) translateX(calc(360px + 32px)) rotateY(-4deg);
     font-size: 1rem;
   }
 
   .sidebar.open {
-    transform: translateX(0);
+    transform: perspective(800px) translateX(0) rotateY(0deg);
   }
 }
 
@@ -779,6 +781,26 @@
   color: var(--color-muted);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
+}
+
+.routeExportBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--color-teal-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-teal);
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s;
+}
+
+.routeExportBtn:active {
+  transform: scale(0.92);
 }
 
 /* Step-by-step turn instructions for selected leg */
