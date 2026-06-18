@@ -5,6 +5,7 @@ import { useName } from './hooks/useName'
 import { useDarkMode } from './hooks/useDarkMode'
 import { useRoute } from './hooks/useRoute'
 import { useCurationState } from './hooks/useCurationState'
+import { buildRouteKml, downloadKml } from './lib/kml'
 import MapView from './components/MapView'
 import Wordmark from './components/Wordmark'
 import NamePrompt from './components/NamePrompt'
@@ -141,6 +142,14 @@ export default function App() {
     setMapMoving(moving)
   }
 
+  function handleExportKml() {
+    const ordered = routeOrderedIds
+      .map((id) => visiblePlaygrounds.find((p) => p.id === id))
+      .filter((p): p is Playground => p !== undefined)
+    if (ordered.length === 0) return
+    downloadKml('tour-de-playground.kml', buildRouteKml(ordered, routeGeoJSON))
+  }
+
   async function handleReset(passphrase: string) {
     if (!import.meta.env.VITE_WORKER_URL)
       throw new Error('No worker URL configured')
@@ -206,6 +215,7 @@ export default function App() {
         routeFetchState={routeFetchState}
         onSetRouteMode={import.meta.env.VITE_ORS_KEY ? setRouteMode : undefined}
         routeLegs={routeLegs.length > 0 ? routeLegs : undefined}
+        onExportRoute={handleExportKml}
       />
       {routeGeoJSON && (
         <ElevationProfile

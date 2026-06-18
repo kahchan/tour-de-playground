@@ -4,6 +4,7 @@ import {
   CaretRight, ArrowDown, ArrowUp, Crosshair,
   ArrowsClockwise, NavigationArrow, Flag,
   ArrowBendDownLeft, ArrowBendDownRight, ArrowUDownLeft,
+  DownloadSimple,
 } from '@phosphor-icons/react'
 
 import type { CheckIn, Playground } from '../types'
@@ -24,6 +25,7 @@ interface Props {
   disabledIds: Set<string>
   onToggleDisabled: (id: string, on: boolean) => void
   onAdminReset: (passphrase: string) => Promise<void>
+  onOpenCurate?: () => void
   highlight?: { id: string; seq: number } | null
   routeOrder?: string[]
   pinnedEndId: string | null
@@ -38,6 +40,7 @@ interface Props {
   routeFetchState?: 'idle' | 'loading' | 'ready' | 'error'
   onSetRouteMode?: (mode: RouteMode) => void
   routeLegs?: LegStat[]
+  onExportRoute?: () => void
 }
 
 interface SuburbGroup {
@@ -88,6 +91,7 @@ export default function Sidebar({
   disabledIds,
   onToggleDisabled,
   onAdminReset,
+  onOpenCurate,
   highlight,
   routeOrder,
   pinnedEndId,
@@ -102,6 +106,7 @@ export default function Sidebar({
   routeFetchState = 'idle',
   onSetRouteMode,
   routeLegs,
+  onExportRoute,
 }: Props) {
   const [expandedSuburbs, setExpandedSuburbs] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState<Filter>(() => {
@@ -342,6 +347,15 @@ export default function Sidebar({
                 List
               </button>
             )}
+            {isAdmin && onOpenCurate && (
+              <button
+                className={styles.resetBtn}
+                onClick={onOpenCurate}
+                title="Open curation queue"
+              >
+                Curate
+              </button>
+            )}
             {isAdmin && !resetConfirming && (
               <button
                 className={styles.resetBtn}
@@ -396,6 +410,16 @@ export default function Sidebar({
                   <span className={styles.routeTotalsRemaining}>
                     {remainingCount} stop{remainingCount !== 1 ? 's' : ''} remaining
                   </span>
+                  {onExportRoute && (
+                    <button
+                      className={styles.routeExportBtn}
+                      onClick={onExportRoute}
+                      title="Download route as KML"
+                      aria-label="Download route as KML"
+                    >
+                      <DownloadSimple size={16} weight="bold" />
+                    </button>
+                  )}
                 </li>
               )}
               {routeItemsWithCumulative.map(({ pos, playground: p, legIdx, cumElev }) => {
