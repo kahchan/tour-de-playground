@@ -18,6 +18,7 @@ interface Props {
   flyTarget: { lat: number; lng: number; nextLat?: number; nextLng?: number; legIndex?: number; seq: number } | null
   onPanChange?: (delta: { x: number; y: number }, moving: boolean) => void
   showLocation: boolean
+  onLocationOff?: () => void
 }
 
 const WELLINGTON: [number, number] = [174.7762, -41.2865]
@@ -256,6 +257,7 @@ export default function MapView({
   flyTarget,
   onPanChange,
   showLocation,
+  onLocationOff,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -492,10 +494,10 @@ export default function MapView({
         })
       },
       () => {
-        // permission denied or unavailable — clear the dot
         source()?.setData({ type: 'FeatureCollection', features: [] })
+        onLocationOff?.()
       },
-      { enableHighAccuracy: true },
+      { enableHighAccuracy: true, timeout: 10000 },
     )
 
     return () => navigator.geolocation.clearWatch(watchId)

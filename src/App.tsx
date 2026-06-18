@@ -165,6 +165,7 @@ export default function App() {
         flyTarget={mapFlyTarget}
         onPanChange={handlePanChange}
         showLocation={showLocation}
+        onLocationOff={() => setShowLocation(false)}
       />
       <Wordmark
         total={visiblePlaygrounds.length}
